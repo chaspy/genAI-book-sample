@@ -1,0 +1,13 @@
+# 環境設定（APIキーを含む）
+.envrc
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
