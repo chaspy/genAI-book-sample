@@ -36,7 +36,7 @@ uv python pin 3.13
 
 ```bash
 # 必要なライブラリを一括インストール
-uv add langchain==0.3.27 langchain-openai==0.3.33 python-dotenv==1.1.1 langchain-community==0.3.29 langgraph==0.6.7
+uv add langchain==1.0.3 langchain-openai==1.0.1 python-dotenv==1.2.1 langchain-community==0.4.1 langgraph==1.0.2
 ```
 
 ### 4. 環境変数の設定
@@ -72,7 +72,7 @@ JupyterLab を使用してサンプルコードを実行する場合は、以下
 
 ```bash
 # JupyterLabをプロジェクトに追加
-uv add jupyterlab==4.4.7
+uv add jupyterlab==4.4.10
 ```
 
 ### 2. JupyterLab の起動
