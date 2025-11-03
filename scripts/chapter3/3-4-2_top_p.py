@@ -3,7 +3,6 @@ import os
 from openai import OpenAI
 
 load_dotenv()
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # top_pの違いによる出力比較（各top_pで3回実行）
@@ -16,7 +15,6 @@ def compare_top_p_multiple_runs(client, prompt, top_p=[0.1, 0.5, 1], runs=3):
         print(f"{'='*40}")
 
         for i in range(runs):
-
             response = client.chat.completions.create(
                 model="gpt-4.1-nano",
                 messages=[{"role": "user", "content": prompt}],

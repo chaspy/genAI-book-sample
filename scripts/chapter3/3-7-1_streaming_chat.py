@@ -4,7 +4,6 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def normal_chat(prompt: str) -> str:
@@ -24,13 +23,11 @@ def normal_chat(prompt: str) -> str:
             ],
             max_completion_tokens=3000
         )
-
         end_time = time.time()
         content = response.choices[0].message.content
 
         # 完了したら一度に表示
         print(f"\r回答 (処理時間: {end_time - start_time:.1f}秒): {content}\n")
-
         return content
 
     except Exception as e:
@@ -56,7 +53,6 @@ def streaming_chat(prompt: str) -> str:
             stream=True,
             max_completion_tokens=3000
         )
-
         # ストリーミングレスポンスを処理
         for chunk in stream:
             if chunk.choices[0].delta.content is not None:
@@ -81,11 +77,7 @@ def main():
     print("- 'stream': ストリーミングチャット（リアルタイム表示）")
     print("- 'quit': 終了")
 
-    # APIキーの確認
     api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or api_key == "your-api-key-here":
-        print("⚠️  OPENAI_API_KEY 環境変数を設定してください")
-
     current_mode = "stream"  # デフォルトはストリーミング
 
     while True:

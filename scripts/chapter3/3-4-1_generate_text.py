@@ -2,10 +2,7 @@ from dotenv import load_dotenv
 import os
 from openai import OpenAI
 
-# .env を読み込む
 load_dotenv()
-
-# OpenAIクライアントを初期化
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def generate_text(prompt):
