@@ -5,10 +5,8 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import InMemoryChatMessageHistory
 
-# 環境変数を読み込み
 load_dotenv()
 
-# モデル
 llm = ChatOpenAI(
     model="gpt-5-nano",
     api_key=os.getenv('OPENAI_API_KEY')

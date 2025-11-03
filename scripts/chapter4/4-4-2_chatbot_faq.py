@@ -4,20 +4,17 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# 環境変数を読み込み
 load_dotenv()
 
 class FAQManager:
     def __init__(self, llm: ChatOpenAI):
         self.llm = llm
         self.faqs = []  # FAQデータを保持（例: [{"q": "質問", "a": "回答"}]）
-
         # プロンプトテンプレートを定義
         self.prompt = ChatPromptTemplate.from_messages([
             ("system", "以下のFAQを参考に、質問に適切な回答を日本語で出力してください。"),
             ("human", "FAQ候補:\n{faq_block}\n\nユーザー質問: {question}")
         ])
-
         # プロンプト → LLM → 出力を文字列として受け取るチェーンを作成
         self.chain = self.prompt | self.llm | StrOutputParser()
 
@@ -40,13 +37,11 @@ class FAQManager:
             # ユーザー質問とFAQの単語に共通部分があればヒットとみなす
             if question_words & faq_words:
                 results.append(item)
-
         return results[:3]  # 最大3件まで返す
 
     def answer(self, question: str) -> str:
         """ユーザーの質問に対して回答を生成する"""
         hits = self._search(question)
-
         if not hits:
             return "該当するFAQが見つかりませんでした。"
 
@@ -58,7 +53,6 @@ class FAQManager:
             "faq_block": faq_block,
             "question": question
         })
-
 
 llm = ChatOpenAI(model="gpt-5-nano", api_key=os.getenv('OPENAI_API_KEY'))
 faq = FAQManager(llm)

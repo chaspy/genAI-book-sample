@@ -9,7 +9,7 @@ load_dotenv()
 # プロンプト
 prompt = ChatPromptTemplate.from_messages([
     ("system", "あなたは日本語を英語に翻訳するアシスタントです。"),
-    ("user",   "次の文章を英語に翻訳してください：\n{text}")
+    ("user", "次の文章を英語に翻訳してください：\n{text}")
 ])
 
 # モデル
@@ -18,12 +18,12 @@ model = ChatOpenAI(
     api_key=os.getenv('OPENAI_API_KEY')
 )
 
-# 出力パーサ
+# 出力パーサー
 parser = StrOutputParser()
 
-# Chain: プロンプト → モデル → パーサ
+# Chain: プロンプト → モデル → パーサー
 chain = prompt | model | parser
 
 # 実行
 result = chain.invoke({"text": "今日はどんな日ですか？"})
-print(result)  # 生成結果（英訳）
+print(result)

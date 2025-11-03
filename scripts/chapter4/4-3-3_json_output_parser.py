@@ -22,10 +22,10 @@ model = ChatOpenAI(
     api_key=os.getenv('OPENAI_API_KEY')
 )
 
-# 出力パーサ
+# 出力パーサー
 parser = JsonOutputParser()
 
-# Chain: プロンプト → モデル → パーサ
+# Chain: プロンプト → モデル → パーサー
 chain = prompt | model | parser
 
 # 実行
