@@ -1,4 +1,4 @@
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 # プロンプトのひな型を定義
 template = "次の文章を英語に翻訳してください：\n{source_text}"

@@ -29,7 +29,7 @@ translate_prompt = ChatPromptTemplate.from_messages([
 translate_chain = translate_prompt | model | to_str
 
 # 合成：{"summary": summary_chain} で下流に渡す
-#    入力 {"text": "..."} → summary_chain が "summary" を生成 → 翻訳へ
+# 入力 {"text": "..."} → summary_chain が "summary" を生成 → 翻訳へ
 composed_chain = {"summary": summary_chain} | translate_chain
 
 text = """今日は来年度主力商品の新プロジェクト打ち合わせがありました。
