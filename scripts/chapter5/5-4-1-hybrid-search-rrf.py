@@ -14,12 +14,13 @@ from dotenv import load_dotenv
 
 # LangChain関連のインポート
 from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers import EnsembleRetriever
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
+
+from hybrid_rrf import ReciprocalRankFusion
 
 
 def load_documents_from_files() -> List[Document]:
@@ -68,6 +69,7 @@ def save_result(filename: str, content: str):
 
     with open(results_dir / filename, 'w', encoding='utf-8') as f:
         f.write(content)
+
 
 def compare_retrieval_methods(splits: List[Document]):
     """検索手法の比較デモ"""
@@ -151,7 +153,7 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
 
     # EnsembleRetrieverでハイブリッド検索を構築
     # weights: 各Retrieverの重み付け（合計が1である必要はない）
-    hybrid_retriever = EnsembleRetriever(
+    hybrid_retriever = ReciprocalRankFusion(
         retrievers=[bm25_retriever, dense_retriever],
         weights=[0.6, 1.0]  # BM25を少し抑えめ、ベクトルを重視
     )
@@ -209,7 +211,7 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         print("-" * 40)
 
         # 異なる重み付けでEnsembleRetrieverを構築
-        weighted_hybrid = EnsembleRetriever(
+        weighted_hybrid = ReciprocalRankFusion(
             retrievers=[bm25_retriever, dense_retriever],
             weights=[bm25_w, vec_w]
         )

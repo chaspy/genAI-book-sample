@@ -17,13 +17,13 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers import EnsembleRetriever
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
+from hybrid_rrf import ReciprocalRankFusion
 
 
 def load_company_documents(data_dir: str = "company_docs") -> List[Document]:
@@ -135,10 +135,13 @@ def create_rag_pipeline(
 
         dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
 
-        # Ensemble Retriever
-        retriever = EnsembleRetriever(
+        hybrid_retriever = ReciprocalRankFusion(
             retrievers=[bm25_retriever, dense_retriever],
             weights=[0.6, 1.0]
+        )
+
+        context_runnable = RunnableLambda(
+            lambda question: format_docs(hybrid_retriever.invoke(question))
         )
     else:
         print("✓ ベクトル検索モードを使用")
@@ -152,6 +155,7 @@ def create_rag_pipeline(
         print("  - Chromaベクトルストアを使用")
 
         retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+        context_runnable = retriever | format_docs
 
     # プロンプトテンプレート（出典必須・ガードレール付き）
     template = """以下の参考文書を基に質問に回答してください。
@@ -182,7 +186,7 @@ def create_rag_pipeline(
 
     # LCELでパイプラインを構築
     rag_chain = (
-        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        {"context": context_runnable, "question": RunnablePassthrough()}
         | prompt
         | llm
         | StrOutputParser()
