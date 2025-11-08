@@ -136,6 +136,7 @@ Action Input: ツールへの入力内容
         max_iterations=MAX_ITERATIONS,
         verbose=True,
         handle_parsing_errors=True,
+        return_intermediate_steps=True,
     )
 
 def main(query: Optional[str] = None, model: str = "gpt-4o-mini", stop_sequence: bool = True) -> None:
