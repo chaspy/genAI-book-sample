@@ -354,6 +354,7 @@ def fetch_page(url: str) -> str:
     print(f"[Tool:Fetch] URL: {url}")
     # オフライン（Tavily キー無し）の場合はスタブを返す
     if not os.getenv("TAVILY_API_KEY"):
+        print("[i] TAVILY_API_KEY が未設定のため、Fetch はスタブ本文を返します。")
         for group in OFFLINE_WEB_DATA.values():
             for item in group:
                 if item.get("url") == url:
