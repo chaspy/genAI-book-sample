@@ -1,4 +1,5 @@
 # 環境設定（APIキーを含む）
+.env
 .envrc
 
 # Python

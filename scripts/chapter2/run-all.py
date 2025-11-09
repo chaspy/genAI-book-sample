@@ -10,31 +10,15 @@ import subprocess
 from pathlib import Path
 from typing import List, Tuple
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 PROMPTS_DIR = Path("prompts")
 OUTPUTS_DIR = Path("outputs")
 
 PROMPTS_DIR.mkdir(exist_ok=True)
 OUTPUTS_DIR.mkdir(exist_ok=True)
-
-def load_envrc():
-    """環境変数を読み込む"""
-    envrc_path = Path(".envrc")
-    if envrc_path.exists():
-        # sourceコマンドを使って環境変数を読み込む
-        subprocess.run(["bash", "-c", f"source {envrc_path}"], shell=False)
-        print("✅ .envrc を読み込みました")
-    
-    # APIキーの確認
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or api_key == "your-api-key-here":
-        print("❌ OPENAI_API_KEY環境変数が設定されていません")
-        print("以下のコマンドを実行してください:")
-        print("  1. .envrc ファイルを編集してAPIキーを設定")
-        print("  2. source .envrc")
-        print("  3. python run-all.py")
-        sys.exit(1)
-    
-    return api_key
 
 def find_prompt_files() -> List[Path]:
     """プロンプトファイルを検索"""
@@ -71,9 +55,10 @@ def main():
     # 環境変数をチェック
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key or api_key == "your-api-key-here":
-        print("\n⚠️  APIキーが設定されていません")
+        print("\n⚠️  OPENAI_API_KEY が設定されていません")
         print("実行前に以下を行ってください:")
-        print("  source .envrc")
+        print("  cp .env.example .env && vi .env")
+        print("  # OPENAI_API_KEY=... を設定")
         sys.exit(1)
     
     # プロンプトファイルを検索

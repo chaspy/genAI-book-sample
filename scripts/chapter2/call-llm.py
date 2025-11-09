@@ -4,7 +4,8 @@
 プロンプトファイルを読み込んで、LLMの応答を出力ファイルに保存します。
 
 使用例:
-    source .envrc && python call-llm.py 2-1-2  # .envrcから環境変数を読み込んで実行
+    cp .env.example .env && vi .env  # APIキーを設定
+    python call-llm.py 2-1-2
     python call-llm.py 2-1-2 --temperature 1.5
     python call-llm.py 2-1-2 --system "あなたは専門家です"
 """
@@ -16,6 +17,10 @@ import json
 import argparse
 from pathlib import Path
 from typing import Optional, Dict, Any
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 PROMPTS_DIR = Path("prompts")
 OUTPUTS_DIR = Path("outputs")
@@ -88,9 +93,8 @@ def call_llm(
     
     if not api_key or api_key == "your-api-key-here":
         print("⚠️ OPENAI_API_KEY環境変数が設定されていません。")
-        print("以下のコマンドを実行してください:")
-        print("  1. .envrc ファイルを編集してAPIキーを設定")
-        print("  2. source .envrc")
+        print("  1. .env.example をコピーして .env を作成")
+        print("  2. .env に OPENAI_API_KEY を設定")
         return "シミュレーション出力：APIキーが設定されていないため、実際のLLM応答は取得できません。"
     
     client = openai.OpenAI(api_key=api_key)
