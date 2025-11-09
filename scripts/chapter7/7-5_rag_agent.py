@@ -16,7 +16,6 @@ from langchain_community.vectorstores import Chroma
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 import warnings
@@ -26,6 +25,7 @@ from langchain_tavily import TavilySearch
 import requests
 from bs4 import BeautifulSoup
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # outputs/ ディレクトリの自動作成
 Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)
