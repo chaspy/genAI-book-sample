@@ -32,7 +32,9 @@ from langchain_text_splitters import (
 # outputs/ ディレクトリの自動作成
 Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)
 
-MAX_STEPS = 8
+# LangGraph の 1 ステップは「LLM 思考 + ツール実行」で2～3カウント進むため、
+# 社内+Web+GitHub を行き来する調査でも余裕があるよう 15 ステップ確保しておく。
+MAX_STEPS = 15
 FETCH_TIMEOUT = 8
 MAX_DOC_LENGTH = 3200
 
