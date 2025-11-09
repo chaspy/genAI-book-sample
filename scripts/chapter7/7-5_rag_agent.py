@@ -17,6 +17,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
+from langgraph.errors import GraphRecursionError
 from langgraph.prebuilt import ToolNode
 import warnings
 
@@ -35,6 +36,9 @@ Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)
 # LangGraph の 1 ステップは「LLM 思考 + ツール実行」で2～3カウント進むため、
 # 社内+Web+GitHub を行き来する調査でも余裕があるよう 15 ステップ確保しておく。
 MAX_STEPS = 15
+# LangGraph 自体の recursion_limit はデフォルト 25 と短いため、
+# 明示的に大きめのバジェットを確保して agent_node ⇔ tool_node の往復に耐えられるようにする。
+GRAPH_RECURSION_LIMIT = 80
 FETCH_TIMEOUT = 8
 MAX_DOC_LENGTH = 3200
 
@@ -775,7 +779,7 @@ def run(query: str) -> None:
     print("=" * 60)
 
     graph = build_graph()
-    final_state = graph.invoke(state)
+    final_state = graph.invoke(state, config={"recursion_limit": GRAPH_RECURSION_LIMIT})
     final_state, final_answer = ensure_final_answer(final_state)
 
     print("\n" + "=" * 60)
@@ -838,7 +842,7 @@ def main() -> None:
         print(f"質問: {query}")
         print("=" * 60)
 
-        final_state = graph.invoke(state)
+        final_state = graph.invoke(state, config={"recursion_limit": GRAPH_RECURSION_LIMIT})
         final_state, final_answer = ensure_final_answer(final_state)
 
         print("\n" + "=" * 60)
