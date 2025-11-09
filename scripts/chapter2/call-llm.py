@@ -17,6 +17,13 @@ import argparse
 from pathlib import Path
 from typing import Optional, Dict, Any
 
+PROMPTS_DIR = Path("prompts")
+OUTPUTS_DIR = Path("outputs")
+
+PROMPTS_DIR.mkdir(exist_ok=True)
+OUTPUTS_DIR.mkdir(exist_ok=True)
+
+
 def read_prompt_file(file_id: str) -> Dict[str, Any]:
     """
     プロンプトファイルを読み込む
@@ -27,7 +34,7 @@ def read_prompt_file(file_id: str) -> Dict[str, Any]:
     Returns:
         プロンプト設定の辞書
     """
-    prompt_file = Path(f"{file_id}-prompt.txt")
+    prompt_file = PROMPTS_DIR / f"{file_id}-prompt.txt"
     
     if not prompt_file.exists():
         raise FileNotFoundError(f"プロンプトファイルが見つかりません: {prompt_file}")
@@ -123,7 +130,8 @@ def save_output(file_id: str, output: str, metadata: Dict[str, Any]):
         output: LLMの出力
         metadata: 実行時のメタデータ
     """
-    output_file = Path(f"{file_id}-out.txt")
+    OUTPUTS_DIR.mkdir(exist_ok=True)
+    output_file = OUTPUTS_DIR / f"{file_id}-out.txt"
     
     content = []
     content.append("---")
@@ -261,7 +269,7 @@ def main():
         
     except FileNotFoundError as e:
         print(f"❌ エラー: {e}")
-        print(f"\nプロンプトファイル '{args.file_id}-prompt.txt' を作成してください。")
+        print(f"\nプロンプトファイル '{PROMPTS_DIR / (args.file_id + '-prompt.txt')}' を作成してください。")
         print("\n例:")
         print("---")
         print("temperature: 0.7")

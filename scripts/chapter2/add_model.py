@@ -4,6 +4,9 @@ model設定がないプロンプトファイルにgpt-5-nanoを追加
 """
 from pathlib import Path
 
+PROMPTS_DIR = Path("prompts")
+PROMPTS_DIR.mkdir(exist_ok=True)
+
 def add_model_to_prompt_file(file_path):
     """プロンプトファイルにモデル設定を追加"""
     content = file_path.read_text()
@@ -38,7 +41,7 @@ def add_model_to_prompt_file(file_path):
 
 # すべてのプロンプトファイルを処理
 modified_files = []
-for file in Path('.').glob('*-prompt.txt'):
+for file in PROMPTS_DIR.glob('*-prompt.txt'):
     if add_model_to_prompt_file(file):
         modified_files.append(file.name)
         print(f"✅ Updated: {file.name}")

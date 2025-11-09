@@ -6,9 +6,12 @@
 """
 from pathlib import Path
 
+PROMPTS_DIR = Path("prompts")
+PROMPTS_DIR.mkdir(exist_ok=True)
+
 # 2-1-2-* 以外のファイルを処理
 changed = 0
-for file in Path('.').glob('*-prompt.txt'):
+for file in PROMPTS_DIR.glob('*-prompt.txt'):
     if not file.name.startswith('2-1-2-'):
         content = file.read_text()
 
