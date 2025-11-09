@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+import textwrap
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
 from dotenv import load_dotenv
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain_core.prompts import PromptTemplate
-from langchain_core.tools import tool
+from langchain.agents import create_agent
+from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.runnables import Runnable
+from langchain_core.tools import BaseTool, tool
 from langchain_openai import ChatOpenAI
 from langchain_tavily import TavilySearch
 
@@ -65,7 +68,39 @@ def offline_search(query: str) -> dict:
         "results": OFFLINE_SEARCH_DATA["results"],
     }
 
-def build_agent(model: str = "gpt-4o-mini", stop_sequence: bool = True) -> AgentExecutor:
+
+def describe_tools(tools: Iterable[BaseTool]) -> str:
+    """ツール一覧を system prompt 用に整形する"""
+    lines = []
+    for tool_obj in tools:
+        name = getattr(tool_obj, "name", tool_obj.__class__.__name__)
+        description = getattr(tool_obj, "description", "") or getattr(tool_obj, "__doc__", "") or "説明なし"
+        description = " ".join(description.strip().split())
+        lines.append(f"- {name}: {description}")
+    return "\n".join(lines)
+
+
+def build_system_prompt(tools: Iterable[BaseTool]) -> str:
+    """create_agent 用の system prompt を生成する"""
+    tool_section = describe_tools(tools)
+    return textwrap.dedent(
+        f"""
+        あなたは調査と要約を担当するアシスタントです。以下のルールを厳守して質問に答えてください。
+
+        1. 必ず最初のアクションでツールを使って検索し、最新情報を取得すること。
+        2. ツールを使わずに結論を出さないこと。
+        3. 回答は必ず検索結果に基づき、出典URLを各ポイントの末尾に半角括弧で記載すること。
+        4. 最終回答は「Final Answer: 」で始め、日本語で簡潔にまとめること。
+
+       利用可能なツール:
+        {tool_section}
+
+        Thought/Action/Observation 形式で行動計画を示し、十分な根拠が集まったら Final Answer を出力してください。
+        """
+    ).strip()
+
+
+def build_agent(model: str = "gpt-4o-mini") -> Runnable:
     """ReAct エージェントを構築する"""
     load_dotenv()
     openai_api_key = require_env("OPENAI_API_KEY")
@@ -73,7 +108,6 @@ def build_agent(model: str = "gpt-4o-mini", stop_sequence: bool = True) -> Agent
 
     print(f"\n=== 検証設定 ===")
     print(f"モデル: {model}")
-    print(f"stop_sequence: {stop_sequence}")
     print("=" * 60 + "\n")
 
     llm = ChatOpenAI(
@@ -90,95 +124,89 @@ def build_agent(model: str = "gpt-4o-mini", stop_sequence: bool = True) -> Agent
     else:
         search_tool = offline_search
 
-    prompt = PromptTemplate(
-        input_variables=["input", "tools", "tool_names", "agent_scratchpad"],
-        template="""
-あなたは調査と要約を専門とするアシスタントです。以下の質問に対し、必ずツールを使って最新情報を取得してから回答してください。
+    tools = [search_tool]
+    system_prompt = build_system_prompt(tools)
 
-重要なルール:
-- 必ず最初にツールで情報を検索してください
-- 検索せずに答えることは禁止です
-- 回答は検索結果に基づいて構築してください
-
-利用可能なツール一覧:
-{tool_names}
-
-ツール詳細:
-{tools}
-
-利用方法:
-```
-Thought: 次に取るべきアクションを説明
-Action: 使用するツール名
-Action Input: ツールへの入力内容
-```
-ツールからの応答は Observation として返されます。
-
-質問: {input}
-
-思考過程:
-{agent_scratchpad}
-
-最終回答は必ず「Final Answer: 」で始め、各ポイントの末尾に出典URLを括弧付きで明記してください。
-""",
+    return create_agent(
+        llm,
+        tools=tools,
+        system_prompt=system_prompt,
     )
 
-    agent = create_react_agent(
-        llm=llm,
-        tools=[search_tool],
-        prompt=prompt,
-        stop_sequence=stop_sequence,
-    )
 
-    return AgentExecutor(
-        agent=agent,
-        tools=[search_tool],
-        max_iterations=MAX_ITERATIONS,
-        verbose=True,
-        handle_parsing_errors=True,
-        return_intermediate_steps=True,
-    )
+def _content_to_text(content: object) -> str:
+    """LangChain Message.content を文字列へ正規化する"""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        texts = []
+        for block in content:
+            if isinstance(block, dict):
+                if "text" in block:
+                    texts.append(str(block["text"]))
+                elif block.get("type") == "text" and "content" in block:
+                    texts.append(str(block["content"]))
+        return "".join(texts)
+    if isinstance(content, dict) and "text" in content:
+        return str(content["text"])
+    return str(content)
 
-def main(query: Optional[str] = None, model: str = "gpt-4o-mini", stop_sequence: bool = True) -> None:
-    agent = build_agent(model=model, stop_sequence=stop_sequence)
+
+def summarize_sources(tool_messages: Iterable[ToolMessage]) -> int:
+    """ツール応答から result URL 数を推定する"""
+    total = 0
+    for message in tool_messages:
+        payload = message.content
+        data = None
+        if isinstance(payload, dict):
+            data = payload
+        elif isinstance(payload, str):
+            try:
+                data = json.loads(payload)
+            except json.JSONDecodeError:
+                data = None
+        elif isinstance(payload, list):
+            for block in payload:
+                if isinstance(block, dict) and "json" in block:
+                    data = block.get("json")
+                    break
+        if isinstance(data, dict):
+            results = data.get("results", [])
+            if isinstance(results, list):
+                total += len(results)
+    return total
+
+
+def main(query: Optional[str] = None, model: str = "gpt-4o-mini") -> None:
+    agent = build_agent(model=model)
     question = query or "2025年の生成 AI 業界の主要な動向を3つ教えてください"
 
     print("=== ReAct Agent による検索・要約 ===\n")
     print(f"質問: {question}\n")
     print("=" * 60)
 
-    result = agent.invoke({"input": question})
+    result = agent.invoke(
+        {"messages": [{"role": "user", "content": question}]},
+        config={"recursion_limit": MAX_ITERATIONS},
+    )
+    messages = result.get("messages", [])
+    final_message = next((m for m in reversed(messages) if isinstance(m, AIMessage)), None)
+    final_answer = _content_to_text(final_message.content).strip() if final_message else ""
+    if final_answer and not final_answer.startswith("Final Answer:"):
+        final_answer = f"Final Answer: {final_answer}"
 
     print("\n" + "=" * 60)
     print("最終回答:\n")
-    print(result["output"])
+    if final_answer:
+        print(final_answer)
+    else:
+        print("Final Answer: 回答を生成できませんでした。")
 
-    # 標準化されたサマリー出力
-    # steps: 実行したイテレーション数
-    steps = len(result.get("intermediate_steps", []))
-
-    # tool_calls: ツール呼び出しの回数
-    tool_calls = sum(1 for step in result.get("intermediate_steps", [])
-                     if len(step) >= 2 and step[0] is not None)
-
-    # sources: 取得したソース数（検索結果のURLを数える）
-    sources = 0
-    for step in result.get("intermediate_steps", []):
-        if len(step) >= 2 and step[1] is not None:
-            # ToolMessage の内容を解析
-            import json
-            try:
-                if isinstance(step[1], dict):
-                    results = step[1].get("results", [])
-                    sources += len(results)
-                elif isinstance(step[1], str):
-                    data = json.loads(step[1])
-                    sources += len(data.get("results", []))
-            except:
-                pass
-
-    # satisfied: Final Answer が生成されたかどうか
-    satisfied = "Final Answer:" in result.get("output", "")
+    tool_messages = [m for m in messages if isinstance(m, ToolMessage)]
+    tool_calls = len(tool_messages)
+    steps = tool_calls
+    sources = summarize_sources(tool_messages)
+    satisfied = final_answer.startswith("Final Answer:")
 
     print(f"\n[Summary] steps={steps} tool_calls={tool_calls} sources={sources} satisfied={satisfied}")
 
@@ -186,18 +214,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ReAct Agent による検索・要約")
     parser.add_argument("query", nargs="?", help="質問（省略時はデフォルト質問を使用）")
     parser.add_argument("--model", default="gpt-4o-mini", help="使用するLLMモデル（デフォルト: gpt-4o-mini）")
-    parser.add_argument(
-        "--stop-sequence",
-        dest="stop_sequence",
-        action="store_true",
-        default=True,
-        help="stop_sequence を有効化（デフォルト: True）",
-    )
-    parser.add_argument(
-        "--no-stop-sequence",
-        dest="stop_sequence",
-        action="store_false",
-        help="stop_sequence を無効化",
-    )
     args = parser.parse_args()
-    main(query=args.query, model=args.model, stop_sequence=args.stop_sequence)
+    main(query=args.query, model=args.model)
