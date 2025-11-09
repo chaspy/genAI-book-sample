@@ -71,3 +71,4 @@ uv run --env-file .env python run_all.py
 - 章本文では `scripts/chapter7` からコードを引用し、`outputs/` に保存した実行結果を掲載します。
 - ネットワーク環境や API 制限により、一部のログは内容が変わることがあります。章のスクリーンショットを更新するときは、最新のログを取得して差し替えてください。
 - GitHub Issues/PR を補完情報として使いたい場合は、事前に `gh auth login` を実行しておくと `7-6_rag_agent.py` が MCP サーバーを自動的に有効化します。
+
