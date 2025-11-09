@@ -111,6 +111,7 @@ OFFLINE_WEB_DATA = {
 class RAGAgentState(TypedDict):
     messages: Annotated[List[BaseMessage], operator.add]
     step_count: int
+    tool_call_count: int
     satisfied: bool
     corp_findings: List[Dict[str, str]]
     web_findings: List[Dict[str, str]]
@@ -450,6 +451,7 @@ def process_search_results(state: RAGAgentState) -> RAGAgentState:
     new_state["messages"] = list(state["messages"])
     new_state["corp_findings"] = [dict(item) for item in state["corp_findings"]]
     new_state["web_findings"] = [dict(item) for item in state["web_findings"]]
+    new_state["tool_call_count"] = state.get("tool_call_count", 0)
 
     tool_name = last_message.name or ""
     raw_content = last_message.content
@@ -460,6 +462,9 @@ def process_search_results(state: RAGAgentState) -> RAGAgentState:
             content = json.dumps(raw_content, ensure_ascii=False)
         except (TypeError, ValueError):
             content = str(raw_content)
+
+    if tool_name:
+        new_state["tool_call_count"] += 1
 
     # corp_searchツールの結果を処理：信頼度を計算してstateに反映
     if tool_name == "corp_search":
@@ -690,6 +695,7 @@ def run(query: str) -> None:
             HumanMessage(content=query),
         ],
         "step_count": 0,
+        "tool_call_count": 0,
         "satisfied": False,
         "corp_findings": [],
         "web_findings": [],
@@ -717,10 +723,7 @@ def run(query: str) -> None:
 
     # 標準化されたサマリー出力
     steps = final_state["step_count"]
-
-    # tool_calls: ツール呼び出しの回数を数える
-    tool_calls = sum(1 for msg in final_state["messages"]
-                     if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None))
+    tool_calls = final_state.get("tool_call_count", 0)
 
     # sources: 取得したソースの数（社内データ + Web データ）
     sources = len(final_state['corp_findings']) + len(final_state['web_findings'])
@@ -755,6 +758,7 @@ def main() -> None:
                 HumanMessage(content=query),
             ],
             "step_count": 0,
+            "tool_call_count": 0,
             "satisfied": False,
             "corp_findings": [],
             "web_findings": [],
@@ -780,8 +784,7 @@ def main() -> None:
 
         # 標準化されたサマリー出力
         steps = final_state["step_count"]
-        tool_calls = sum(1 for msg in final_state["messages"]
-                         if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None))
+        tool_calls = final_state.get("tool_call_count", 0)
         sources = len(final_state['corp_findings']) + len(final_state['web_findings'])
         satisfied = final_state["satisfied"]
 
