@@ -270,6 +270,7 @@ def web_search(query: str) -> str:
                 }
             )
     else:
+        print("[i] TAVILY_API_KEY が未設定のため、Web検索はスタブデータで代用します。")
         key = "申請" if "申請" in query else "default"
         processed = [dict(item) for item in OFFLINE_WEB_DATA.get(key, OFFLINE_WEB_DATA["default"])]
 

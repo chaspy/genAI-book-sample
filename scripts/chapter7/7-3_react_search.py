@@ -125,6 +125,7 @@ def build_agent(model: str = "gpt-4o-mini") -> Runnable:
             include_answer=True,
         )
     else:
+        print("[i] TAVILY_API_KEY が未設定のため、ReAct エージェントはオフライン検索データを使用します。")
         search_tool = offline_search
 
     tools = [search_tool]
