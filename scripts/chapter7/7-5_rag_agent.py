@@ -688,6 +688,71 @@ def build_graph() -> StateGraph:
     return asyncio.run(build_graph_async())
 
 
+def _extract_final_answer(messages: List[BaseMessage]) -> Optional[str]:
+    """既存の AIMessage から最終回答を抽出する"""
+    for message in reversed(messages):
+        if isinstance(message, AIMessage) and not getattr(message, "tool_calls", None):
+            content = message.content
+            if isinstance(content, str) and content.strip():
+                return content.strip()
+    return None
+
+
+def _synthesize_fallback_answer(state: RAGAgentState) -> Optional[str]:
+    """十分なツール結果があるのに LLM が Final Answer を返せなかった場合のフェイルセーフ"""
+    if not state["corp_findings"] and not state["web_findings"]:
+        return None
+
+    context_lines = []
+    if state["corp_findings"]:
+        context_lines.append("## 社内データ")
+        for finding in state["corp_findings"][:4]:
+            src = finding.get("source", "不明")
+            page = finding.get("page")
+            snippet = finding.get("content", "")[:200]
+            label = f"{src}" + (f" p.{page}" if page else "")
+            context_lines.append(f"- {snippet} ({label})")
+    if state["web_findings"]:
+        context_lines.append("## Webデータ")
+        for finding in state["web_findings"][:4]:
+            url = finding.get("url", "不明")
+            snippet = finding.get("content") or finding.get("snippet", "")
+            context_lines.append(f"- {snippet[:200]} ({url})")
+
+    prompt = (
+        "あなたは調査エージェントです。以下の証拠を基に質問に答えてください。\n"
+        "必ず『Final Answer:』で始め、各ポイントの末尾に出典（社内資料名やURL）を括弧で示してください。\n"
+        "証拠が不足している点は率直に不足と述べて構いません。"
+    )
+
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
+    response = llm.invoke(
+        [
+            SystemMessage(content=prompt),
+            HumanMessage(
+                content=f"質問: {state['query']}\n\n証拠:\n" + "\n".join(context_lines),
+            ),
+        ]
+    )
+    return response.content if isinstance(response.content, str) else None
+
+
+def ensure_final_answer(state: RAGAgentState) -> tuple[RAGAgentState, Optional[str]]:
+    """最終回答が存在することを保証し、必要ならフェイルセーフで生成する"""
+    existing = _extract_final_answer(state["messages"])
+    if existing:
+        return state, existing
+
+    fallback = _synthesize_fallback_answer(state)
+    if not fallback:
+        return state, None
+
+    new_state = dict(state)
+    new_state["messages"] = [*state["messages"], AIMessage(content=fallback)]
+    new_state["satisfied"] = True
+    return new_state, fallback
+
+
 def run(query: str) -> None:
     state: RAGAgentState = {
         "messages": [
@@ -709,13 +774,14 @@ def run(query: str) -> None:
 
     graph = build_graph()
     final_state = graph.invoke(state)
+    final_state, final_answer = ensure_final_answer(final_state)
 
     print("\n" + "=" * 60)
     print("最終回答:\n")
-    for message in reversed(final_state["messages"]):
-        if isinstance(message, AIMessage) and not getattr(message, "tool_calls", None):
-            print(message.content)
-            break
+    if final_answer:
+        print(final_answer)
+    else:
+        print("Final Answer: 十分な情報が得られませんでした。")
 
     print(f"\n信頼度: {final_state['confidence']:.2f}")
     print(f"社内データ: {len(final_state['corp_findings'])} 件")
@@ -771,13 +837,14 @@ def main() -> None:
         print("=" * 60)
 
         final_state = graph.invoke(state)
+        final_state, final_answer = ensure_final_answer(final_state)
 
         print("\n" + "=" * 60)
         print("最終回答:\n")
-        for message in reversed(final_state["messages"]):
-            if isinstance(message, AIMessage) and not getattr(message, "tool_calls", None):
-                print(message.content)
-                break
+        if final_answer:
+            print(final_answer)
+        else:
+            print("Final Answer: 十分な情報が得られませんでした。")
         print(f"\n信頼度: {final_state['confidence']:.2f}")
         print(f"社内データ: {len(final_state['corp_findings'])} 件")
         print(f"Web データ: {len(final_state['web_findings'])} 件")
