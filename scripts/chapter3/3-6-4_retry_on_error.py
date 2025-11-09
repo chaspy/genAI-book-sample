@@ -5,7 +5,6 @@ import os
 from openai import OpenAI, APIError, RateLimitError, AuthenticationError, BadRequestError
 
 load_dotenv()
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def retry_on_error(max_retries=3, initial_delay=1.0, backoff_factor=2.0):
