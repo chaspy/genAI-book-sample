@@ -27,11 +27,13 @@
 
 ### セットアップ
 ```bash
-# 必要なパッケージのインストール
-pip install openai tiktoken
+# uvで依存関係を同期
+uv venv
+uv pip sync pyproject.toml
 
-# .envrc ファイルを編集してAPIキーを設定
-vi .envrc  # OPENAI_API_KEY の値を実際のキーに変更
+# .envrc に API キーを設定
+cp .envrc.example .envrc
+vi .envrc
 
 # 環境変数を読み込む
 source .envrc
@@ -59,8 +61,8 @@ python call-llm.py 2-2-3 --system "あなたは専門家です"
 
 ### 動作確認
 ```bash
-# すべての基本機能をテスト
-./test.sh
+# 全体テスト
+python call-llm.py 2-1-2 --temperature 0.7
 ```
 
 ### 全プロンプトの一括実行
@@ -114,57 +116,7 @@ has_system_prompt: no
 LLMの応答がここに記録されます
 ```
 
-## 🚀 以前のクイックスタート（レガシー）
-
-最も簡単な方法（Make使用）:
-
-```bash
-# 1. 環境構築
-make setup
-
-# 2. API キー設定
-cp .env.example .env
-# .envファイルを編集してAPIキーを設定
-
-# 3. デモ実行
-make demo
-```
-
-## 📦 環境構築方法（再現性重視）
-
-### 方法1: uv（推奨・高速）
-
-```bash
-# uvのインストール（初回のみ）
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 環境構築
-uv venv
-uv pip sync pyproject.toml
-
-# 環境有効化
-source .venv/bin/activate
-```
-
-### 方法2: Docker（完全分離環境）
-
-```bash
-# イメージビルド
-docker build -t genai-book-chapter2 .
-
-# 実行
-docker run --rm -it --env-file .env genai-book-chapter2 \
-  python 2-1-2_temperature_demo.py --demo
-```
-
-### 方法4: 対話式セットアップ
-
-```bash
-# setupスクリプトを実行（環境を自動判定）
-bash setup.sh
-```
-
-## 🔑 API キー設定
+# 🔑 API キー設定
 
 ```bash
 # .envファイルを作成
@@ -242,10 +194,7 @@ cat evaluation_results.json
 ## 🧪 すべてのデモを実行
 
 ```bash
-# Makefileを使用
-make demo-all
-
-# または個別に実行
+# 個別に実行
 python 2-1-2_temperature_demo.py --demo
 python 2-1-3_message_role_demo.py --system
 python 2-4_chain_of_thought_demo.py --math
@@ -278,7 +227,6 @@ scripts/chapter2/
 ├── pyproject.toml                   # uv用設定ファイル
 ├── .python-version                  # Pythonバージョン指定（3.11.9）
 ├── .env.example                     # 環境変数テンプレート
-├── setup.sh                         # 対話式セットアップスクリプト
 ├── Makefile                         # よく使うコマンド集
 ├── Dockerfile                       # Docker環境定義
 ├── test_temperature.sh              # Temperature効果の実行テスト
