@@ -40,37 +40,37 @@ vi .env  # OPENAI_API_KEY=sk-... を入力
 
 ### トークン数計測（2-1-1）
 ```bash
-python 2-1-1.py
+uv run python 2-1-1.py
 ```
 
 ### LLM API呼び出し
 ```bash
 # 基本的な実行
-python call-llm.py 2-1-2
+uv run python call-llm.py 2-1-2
 
 # Temperature を変えて実行
-python call-llm.py 2-1-2 --temperature 1.5
+uv run python call-llm.py 2-1-2 --temperature 1.5
 
 # 複数回実行して比較
-python call-llm.py 2-1-2 --repeat 5 --temperature 0.8
+uv run python call-llm.py 2-1-2 --repeat 5 --temperature 0.8
 
 # システムプロンプトを指定
-python call-llm.py 2-2-3 --system "あなたは専門家です"
+uv run python call-llm.py 2-2-3 --system "あなたは専門家です"
 ```
 
 ### 動作確認
 ```bash
 # 全体テスト
-python call-llm.py 2-1-2 --temperature 0.7
+uv run python call-llm.py 2-1-2 --temperature 0.7
 ```
 
 ### 全プロンプトの一括実行
 ```bash
 # 全プロンプトファイルを順番に実行
-python run-all.py
+uv run python run-all.py
 
 # または直接実行
-./run-all.py
+uv run python run-all.py
 ```
 
 ## プロンプトファイル一覧
@@ -148,30 +148,30 @@ vim .env  # または好きなエディタで
 
 ```bash
 # デフォルトのデモ（Temperature 0.2, 0.5, 0.7, 0.9で比較）
-python 2-1-2_temperature_demo.py --demo
+uv run python 2-1-2_temperature_demo.py --demo
 
 # カスタムプロンプトで実験
-python 2-1-2_temperature_demo.py --prompt "明日の天気を詩的に表現してください"
+uv run python 2-1-2_temperature_demo.py --prompt "明日の天気を詩的に表現してください"
 ```
 
 ### メッセージロールの効果
 
 ```bash
 # システムロールの効果検証
-python 2-1-3_message_role_demo.py --system
+uv run python 2-1-3_message_role_demo.py --system
 
 # 会話履歴の維持
-python 2-1-3_message_role_demo.py --conversation
+uv run python 2-1-3_message_role_demo.py --conversation
 
 # API vs UI の違い説明
-python 2-1-3_message_role_demo.py --explanation
+uv run python 2-1-3_message_role_demo.py --explanation
 ```
 
 ```bash
 # 個別に実行
-python 2-1-2_temperature_demo.py --demo
-python 2-1-3_message_role_demo.py --system
-python 2-4_chain_of_thought_demo.py --math
+uv run python 2-1-2_temperature_demo.py --demo
+uv run python 2-1-3_message_role_demo.py --system
+uv run python 2-4_chain_of_thought_demo.py --math
 ```
 
 ## 📖 参考資料

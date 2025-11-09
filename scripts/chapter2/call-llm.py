@@ -5,9 +5,9 @@
 
 使用例:
     cp .env.example .env && vi .env  # APIキーを設定
-    python call-llm.py 2-1-2
-    python call-llm.py 2-1-2 --temperature 1.5
-    python call-llm.py 2-1-2 --system "あなたは専門家です"
+    uv run python call-llm.py 2-1-2
+    uv run python call-llm.py 2-1-2 --temperature 1.5
+    uv run python call-llm.py 2-1-2 --system "あなたは専門家です"
 """
 
 import openai
