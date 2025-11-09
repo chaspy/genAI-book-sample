@@ -151,8 +151,7 @@ def main(query: Optional[str] = None, model: str = "gpt-4o-mini", stop_sequence:
 
     print("\n" + "=" * 60)
     print("最終回答:\n")
-    output_text = result.get("output", "")
-    print(output_text)
+    print(result.get("output", ""))
 
     # 標準化されたサマリー出力
     # steps: 実行したイテレーション数
@@ -179,7 +178,7 @@ def main(query: Optional[str] = None, model: str = "gpt-4o-mini", stop_sequence:
                 pass
 
     # satisfied: 何らかの最終回答が生成されたかどうか
-    satisfied = bool(output_text)
+    satisfied = bool(result.get("output"))
 
     print(f"\n[Summary] steps={steps} tool_calls={tool_calls} sources={sources} satisfied={satisfied}")
 
