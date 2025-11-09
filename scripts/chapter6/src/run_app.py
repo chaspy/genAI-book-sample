@@ -4,7 +4,7 @@ from langfuse.openai import openai
 import os
 
 lf = Langfuse()
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = openai.OpenAI()
 
 PROMPT_NAME = "product-helpful-answer"
 PROMPT_TYPE = "text"
