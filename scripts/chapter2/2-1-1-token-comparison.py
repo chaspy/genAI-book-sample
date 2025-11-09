@@ -44,8 +44,8 @@ def main() -> None:
     encoding = tiktoken.get_encoding("cl100k_base")
 
     pairs = [
-        ("人工知能", "ArtificialIntelligence"),
-        ("デバッグする", "Debugcode"),
+        ("人工知能", "Artificial Intelligence"),
+        ("デバッグする", "Debug code"),
         ("やあ！", "Hello!"),
     ]
 
