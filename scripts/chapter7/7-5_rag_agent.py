@@ -25,7 +25,9 @@ from langchain_tavily import TavilySearch
 import requests
 from bs4 import BeautifulSoup
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter,
+)  # LangChain v1 でモジュール分割された text splitter
 
 # outputs/ ディレクトリの自動作成
 Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)

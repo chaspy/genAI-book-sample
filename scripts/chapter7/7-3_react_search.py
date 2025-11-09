@@ -17,11 +17,14 @@ from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool, tool
 from langchain_openai import ChatOpenAI
 from langchain_tavily import TavilySearch
+from langgraph.errors import GraphRecursionError
 
 # outputs/ ディレクトリの自動作成
 Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)
 
-MAX_ITERATIONS = 5
+# LangGraph では LLM ステップと Tool ステップの両方がカウントされるため、
+# ReAct の 3～4 回のツール利用を許容するようデフォルト 12 ステップを確保しておく。
+DEFAULT_RECURSION_LIMIT = 12
 
 OFFLINE_SEARCH_DATA = {
     "answer": (
@@ -125,6 +128,8 @@ def build_agent(model: str = "gpt-4o-mini") -> Runnable:
         search_tool = offline_search
 
     tools = [search_tool]
+    # LangChain v1 では create_agent + system prompt が公式推奨構成のため、
+    # ReAct 要件（初手で検索し Final Answer を整形）を system prompt に集約する。
     system_prompt = build_system_prompt(tools)
 
     return create_agent(
@@ -177,7 +182,11 @@ def summarize_sources(tool_messages: Iterable[ToolMessage]) -> int:
     return total
 
 
-def main(query: Optional[str] = None, model: str = "gpt-4o-mini") -> None:
+def main(
+    query: Optional[str] = None,
+    model: str = "gpt-4o-mini",
+    recursion_limit: int = DEFAULT_RECURSION_LIMIT,
+) -> None:
     agent = build_agent(model=model)
     question = query or "2025年の生成 AI 業界の主要な動向を3つ教えてください"
 
@@ -185,10 +194,20 @@ def main(query: Optional[str] = None, model: str = "gpt-4o-mini") -> None:
     print(f"質問: {question}\n")
     print("=" * 60)
 
-    result = agent.invoke(
-        {"messages": [{"role": "user", "content": question}]},
-        config={"recursion_limit": MAX_ITERATIONS},
-    )
+    try:
+        result = agent.invoke(
+            {"messages": [{"role": "user", "content": question}]},
+            config={"recursion_limit": recursion_limit},
+        )
+    except GraphRecursionError as exc:
+        print("\n" + "=" * 60)
+        print("[Error] LangGraph の再帰上限に達したため途中で停止しました。")
+        print(
+            "ヒント: `--max-steps` で値を大きくするか、質問を具体化して再実行してください "
+            f"(現在の設定: {recursion_limit})."
+        )
+        print(f"詳細: {exc}")
+        return
     messages = result.get("messages", [])
     final_message = next((m for m in reversed(messages) if isinstance(m, AIMessage)), None)
     final_answer = _content_to_text(final_message.content).strip() if final_message else ""
@@ -208,11 +227,20 @@ def main(query: Optional[str] = None, model: str = "gpt-4o-mini") -> None:
     sources = summarize_sources(tool_messages)
     satisfied = final_answer.startswith("Final Answer:")
 
-    print(f"\n[Summary] steps={steps} tool_calls={tool_calls} sources={sources} satisfied={satisfied}")
+    print(
+        f"\n[Summary] steps={steps} tool_calls={tool_calls} sources={sources} "
+        f"satisfied={satisfied} limit={recursion_limit}"
+    )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ReAct Agent による検索・要約")
     parser.add_argument("query", nargs="?", help="質問（省略時はデフォルト質問を使用）")
     parser.add_argument("--model", default="gpt-4o-mini", help="使用するLLMモデル（デフォルト: gpt-4o-mini）")
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=DEFAULT_RECURSION_LIMIT,
+        help="LangGraph の recursion_limit を指定。Tool/LLM ステップ合計の上限 (デフォルト: 12)",
+    )
     args = parser.parse_args()
-    main(query=args.query, model=args.model)
+    main(query=args.query, model=args.model, recursion_limit=args.max_steps)
