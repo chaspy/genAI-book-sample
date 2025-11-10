@@ -10,30 +10,19 @@ import subprocess
 from pathlib import Path
 from typing import List, Tuple
 
-def load_envrc():
-    """環境変数を読み込む"""
-    envrc_path = Path(".envrc")
-    if envrc_path.exists():
-        # sourceコマンドを使って環境変数を読み込む
-        subprocess.run(["bash", "-c", f"source {envrc_path}"], shell=False)
-        print("✅ .envrc を読み込みました")
-    
-    # APIキーの確認
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or api_key == "your-api-key-here":
-        print("❌ OPENAI_API_KEY環境変数が設定されていません")
-        print("以下のコマンドを実行してください:")
-        print("  1. .envrc ファイルを編集してAPIキーを設定")
-        print("  2. source .envrc")
-        print("  3. python run-all.py")
-        sys.exit(1)
-    
-    return api_key
+from dotenv import load_dotenv
 
-def find_prompt_files() -> List[str]:
+load_dotenv()
+
+PROMPTS_DIR = Path("prompts")
+OUTPUTS_DIR = Path("outputs")
+
+PROMPTS_DIR.mkdir(exist_ok=True)
+OUTPUTS_DIR.mkdir(exist_ok=True)
+
+def find_prompt_files() -> List[Path]:
     """プロンプトファイルを検索"""
-    prompt_files = sorted(Path(".").glob("*-prompt.txt"))
-    return [str(f) for f in prompt_files]
+    return sorted(PROMPTS_DIR.glob("*-prompt.txt"))
 
 def run_prompt(file_id: str) -> Tuple[bool, str]:
     """個別のプロンプトを実行"""
@@ -46,9 +35,9 @@ def run_prompt(file_id: str) -> Tuple[bool, str]:
         )
         
         if result.returncode == 0:
-            output_file = f"{file_id}-out.txt"
-            if Path(output_file).exists():
-                return True, output_file
+            output_file = OUTPUTS_DIR / f"{file_id}-out.txt"
+            if output_file.exists():
+                return True, str(output_file)
             return True, None
         else:
             return False, result.stderr
@@ -66,9 +55,10 @@ def main():
     # 環境変数をチェック
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key or api_key == "your-api-key-here":
-        print("\n⚠️  APIキーが設定されていません")
+        print("\n⚠️  OPENAI_API_KEY が設定されていません")
         print("実行前に以下を行ってください:")
-        print("  source .envrc")
+        print("  cp .env.example .env && vi .env")
+        print("  # OPENAI_API_KEY=... を設定")
         sys.exit(1)
     
     # プロンプトファイルを検索
@@ -79,8 +69,8 @@ def main():
         sys.exit(1)
     
     print(f"\n見つかったプロンプトファイル: {len(prompt_files)}個")
-    for f in prompt_files:
-        print(f"  - {f}")
+    for path in prompt_files:
+        print(f"  - {path}")
     
     print("\n実行を開始します...")
     print("-" * 50)
@@ -89,9 +79,8 @@ def main():
     failed_count = 0
     output_files = []
     
-    for i, prompt_file in enumerate(prompt_files, 1):
-        # ファイル名からIDを抽出
-        file_id = prompt_file.replace("-prompt.txt", "")
+    for i, prompt_path in enumerate(prompt_files, 1):
+        file_id = prompt_path.name.replace("-prompt.txt", "")
         
         print(f"\n[{i}/{len(prompt_files)}] 実行中: {file_id}")
         

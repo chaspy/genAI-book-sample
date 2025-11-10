@@ -4,9 +4,10 @@
 プロンプトファイルを読み込んで、LLMの応答を出力ファイルに保存します。
 
 使用例:
-    source .envrc && python call-llm.py 2-1-2  # .envrcから環境変数を読み込んで実行
-    python call-llm.py 2-1-2 --temperature 1.5
-    python call-llm.py 2-1-2 --system "あなたは専門家です"
+    cp .env.example .env && vi .env  # APIキーを設定
+    uv run python call-llm.py 2-1-2
+    uv run python call-llm.py 2-1-2 --temperature 1.5
+    uv run python call-llm.py 2-1-2 --system "あなたは専門家です"
 """
 
 import openai
@@ -16,6 +17,17 @@ import json
 import argparse
 from pathlib import Path
 from typing import Optional, Dict, Any
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+PROMPTS_DIR = Path("prompts")
+OUTPUTS_DIR = Path("outputs")
+
+PROMPTS_DIR.mkdir(exist_ok=True)
+OUTPUTS_DIR.mkdir(exist_ok=True)
+
 
 def read_prompt_file(file_id: str) -> Dict[str, Any]:
     """
@@ -27,7 +39,7 @@ def read_prompt_file(file_id: str) -> Dict[str, Any]:
     Returns:
         プロンプト設定の辞書
     """
-    prompt_file = Path(f"{file_id}-prompt.txt")
+    prompt_file = PROMPTS_DIR / f"{file_id}-prompt.txt"
     
     if not prompt_file.exists():
         raise FileNotFoundError(f"プロンプトファイルが見つかりません: {prompt_file}")
@@ -81,9 +93,8 @@ def call_llm(
     
     if not api_key or api_key == "your-api-key-here":
         print("⚠️ OPENAI_API_KEY環境変数が設定されていません。")
-        print("以下のコマンドを実行してください:")
-        print("  1. .envrc ファイルを編集してAPIキーを設定")
-        print("  2. source .envrc")
+        print("  1. .env.example をコピーして .env を作成")
+        print("  2. .env に OPENAI_API_KEY を設定")
         return "シミュレーション出力：APIキーが設定されていないため、実際のLLM応答は取得できません。"
     
     client = openai.OpenAI(api_key=api_key)
@@ -123,7 +134,8 @@ def save_output(file_id: str, output: str, metadata: Dict[str, Any]):
         output: LLMの出力
         metadata: 実行時のメタデータ
     """
-    output_file = Path(f"{file_id}-out.txt")
+    OUTPUTS_DIR.mkdir(exist_ok=True)
+    output_file = OUTPUTS_DIR / f"{file_id}-out.txt"
     
     content = []
     content.append("---")
@@ -261,7 +273,7 @@ def main():
         
     except FileNotFoundError as e:
         print(f"❌ エラー: {e}")
-        print(f"\nプロンプトファイル '{args.file_id}-prompt.txt' を作成してください。")
+        print(f"\nプロンプトファイル '{PROMPTS_DIR / (args.file_id + '-prompt.txt')}' を作成してください。")
         print("\n例:")
         print("---")
         print("temperature: 0.7")
