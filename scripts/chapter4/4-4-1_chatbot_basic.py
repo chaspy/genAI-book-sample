@@ -14,7 +14,7 @@ llm = ChatOpenAI(
 
 # プロンプト（役割＋履歴＋ユーザー入力）
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "あなたは社内サポート用チャットボットです。丁寧かつ正確に回答してください。"),
+    ("system", "あなたは社内サポート用チャットボットです。400字以内で丁寧かつ正確に回答してください。"),
     MessagesPlaceholder("chat_history"),
     ("human", "{input}")
 ])
@@ -30,7 +30,7 @@ def get_session_history(session_id: str) -> InMemoryChatMessageHistory:
         store[session_id] = InMemoryChatMessageHistory()
     return store[session_id]
 
-# 会話用ラッパー（RunnableWithMessageHistory）
+# 会話用ラッパー
 chatbot = RunnableWithMessageHistory(
     chain,
     get_session_history,
