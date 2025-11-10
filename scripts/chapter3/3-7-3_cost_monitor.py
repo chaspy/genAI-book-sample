@@ -56,9 +56,9 @@ class SimpleCostMonitor:
 
         # アラートチェック
         if self.today_cost > self.daily_budget:
-            print(f"🚨 予算超過: ${self.today_cost:.4f} (予算: ${self.daily_budget})")
+            print(f"予算超過: ${self.today_cost:.4f} (予算: ${self.daily_budget})")
         elif self.today_cost > self.daily_budget * 0.8:
-            print(f"⚠️ 予算80%到達: ${self.today_cost:.4f}")
+            print(f"予算80%到達: ${self.today_cost:.4f}")
 
         print(f"今回: ${cost:.4f} | 累計: ${self.today_cost:.4f} ({self.request_count}回)")
         return cost

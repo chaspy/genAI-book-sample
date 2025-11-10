@@ -3,7 +3,6 @@ import os
 from openai import OpenAI
 
 load_dotenv()
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def contextual_translate(text, context=""):
@@ -26,7 +25,6 @@ def contextual_translate(text, context=""):
         ],
         temperature=0.2
     )
-
     return response.choices[0].message.content
 
 # 使用例
