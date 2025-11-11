@@ -88,6 +88,7 @@ def create_search_tool():
             include_answer=True,
             include_raw_content=False,
         )
+    print("[i] TAVILY_API_KEY が未設定のため、LangGraph エージェントはオフライン検索データを使用します。")
     return offline_search
 
 def agent_node(state: AgentState) -> AgentState:

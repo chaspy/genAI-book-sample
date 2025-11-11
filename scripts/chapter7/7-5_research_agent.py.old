@@ -126,6 +126,7 @@ def web_search(query: str) -> str:
                 }
             )
     else:
+        print("[i] TAVILY_API_KEY が未設定のため、Research エージェントはスタブ検索結果を使用します。")
         processed = [
             {
                 "url": data["url"],
@@ -144,6 +145,7 @@ def fetch_page(url: str) -> str:
     """指定 URL の本文をテキストとして取得する"""
     print(f"[Tool:Fetch] URL: {url}")
     if not os.getenv("TAVILY_API_KEY"):
+        print("[i] TAVILY_API_KEY が未設定のため、Fetch はスタブ本文を返します。")
         for data in OFFLINE_SEARCH_RESULTS:
             if data["url"] == url:
                 print(f"[Tool:Fetch] オフラインデータを返却 ({len(data['content'])} 文字)")

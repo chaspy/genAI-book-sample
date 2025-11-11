@@ -16,8 +16,8 @@ from langchain_community.vectorstores import Chroma
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langgraph.graph import StateGraph, END
+from langgraph.errors import GraphRecursionError
 from langgraph.prebuilt import ToolNode
 import warnings
 
@@ -26,11 +26,19 @@ from langchain_tavily import TavilySearch
 import requests
 from bs4 import BeautifulSoup
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter,
+)  # LangChain v1 でモジュール分割された text splitter
 
 # outputs/ ディレクトリの自動作成
 Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)
 
-MAX_STEPS = 8
+# LangGraph の 1 ステップは「LLM 思考 + ツール実行」で2～3カウント進むため、
+# 社内+Web+GitHub を行き来する調査でも余裕があるよう 15 ステップ確保しておく。
+MAX_STEPS = 15
+# LangGraph 自体の recursion_limit はデフォルト 25 と短いため、
+# 明示的に大きめのバジェットを確保して agent_node ⇔ tool_node の往復に耐えられるようにする。
+GRAPH_RECURSION_LIMIT = 80
 FETCH_TIMEOUT = 8
 MAX_DOC_LENGTH = 3200
 
@@ -109,6 +117,7 @@ OFFLINE_WEB_DATA = {
 class RAGAgentState(TypedDict):
     messages: Annotated[List[BaseMessage], operator.add]
     step_count: int
+    tool_call_count: int
     satisfied: bool
     corp_findings: List[Dict[str, str]]
     web_findings: List[Dict[str, str]]
@@ -261,6 +270,7 @@ def web_search(query: str) -> str:
                 }
             )
     else:
+        print("[i] TAVILY_API_KEY が未設定のため、Web検索はスタブデータで代用します。")
         key = "申請" if "申請" in query else "default"
         processed = [dict(item) for item in OFFLINE_WEB_DATA.get(key, OFFLINE_WEB_DATA["default"])]
 
@@ -344,6 +354,7 @@ def fetch_page(url: str) -> str:
     print(f"[Tool:Fetch] URL: {url}")
     # オフライン（Tavily キー無し）の場合はスタブを返す
     if not os.getenv("TAVILY_API_KEY"):
+        print("[i] TAVILY_API_KEY が未設定のため、Fetch はスタブ本文を返します。")
         for group in OFFLINE_WEB_DATA.values():
             for item in group:
                 if item.get("url") == url:
@@ -448,6 +459,7 @@ def process_search_results(state: RAGAgentState) -> RAGAgentState:
     new_state["messages"] = list(state["messages"])
     new_state["corp_findings"] = [dict(item) for item in state["corp_findings"]]
     new_state["web_findings"] = [dict(item) for item in state["web_findings"]]
+    new_state["tool_call_count"] = state.get("tool_call_count", 0)
 
     tool_name = last_message.name or ""
     raw_content = last_message.content
@@ -458,6 +470,9 @@ def process_search_results(state: RAGAgentState) -> RAGAgentState:
             content = json.dumps(raw_content, ensure_ascii=False)
         except (TypeError, ValueError):
             content = str(raw_content)
+
+    if tool_name:
+        new_state["tool_call_count"] += 1
 
     # corp_searchツールの結果を処理：信頼度を計算してstateに反映
     if tool_name == "corp_search":
@@ -681,6 +696,71 @@ def build_graph() -> StateGraph:
     return asyncio.run(build_graph_async())
 
 
+def _extract_final_answer(messages: List[BaseMessage]) -> Optional[str]:
+    """既存の AIMessage から最終回答を抽出する"""
+    for message in reversed(messages):
+        if isinstance(message, AIMessage) and not getattr(message, "tool_calls", None):
+            content = message.content
+            if isinstance(content, str) and content.strip():
+                return content.strip()
+    return None
+
+
+def _synthesize_fallback_answer(state: RAGAgentState) -> Optional[str]:
+    """十分なツール結果があるのに LLM が Final Answer を返せなかった場合のフェイルセーフ"""
+    if not state["corp_findings"] and not state["web_findings"]:
+        return None
+
+    context_lines = []
+    if state["corp_findings"]:
+        context_lines.append("## 社内データ")
+        for finding in state["corp_findings"][:4]:
+            src = finding.get("source", "不明")
+            page = finding.get("page")
+            snippet = finding.get("content", "")[:200]
+            label = f"{src}" + (f" p.{page}" if page else "")
+            context_lines.append(f"- {snippet} ({label})")
+    if state["web_findings"]:
+        context_lines.append("## Webデータ")
+        for finding in state["web_findings"][:4]:
+            url = finding.get("url", "不明")
+            snippet = finding.get("content") or finding.get("snippet", "")
+            context_lines.append(f"- {snippet[:200]} ({url})")
+
+    prompt = (
+        "あなたは調査エージェントです。以下の証拠を基に質問に答えてください。\n"
+        "必ず『Final Answer:』で始め、各ポイントの末尾に出典（社内資料名やURL）を括弧で示してください。\n"
+        "証拠が不足している点は率直に不足と述べて構いません。"
+    )
+
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
+    response = llm.invoke(
+        [
+            SystemMessage(content=prompt),
+            HumanMessage(
+                content=f"質問: {state['query']}\n\n証拠:\n" + "\n".join(context_lines),
+            ),
+        ]
+    )
+    return response.content if isinstance(response.content, str) else None
+
+
+def ensure_final_answer(state: RAGAgentState) -> tuple[RAGAgentState, Optional[str]]:
+    """最終回答が存在することを保証し、必要ならフェイルセーフで生成する"""
+    existing = _extract_final_answer(state["messages"])
+    if existing:
+        return state, existing
+
+    fallback = _synthesize_fallback_answer(state)
+    if not fallback:
+        return state, None
+
+    new_state = dict(state)
+    new_state["messages"] = [*state["messages"], AIMessage(content=fallback)]
+    new_state["satisfied"] = True
+    return new_state, fallback
+
+
 def run(query: str) -> None:
     state: RAGAgentState = {
         "messages": [
@@ -688,6 +768,7 @@ def run(query: str) -> None:
             HumanMessage(content=query),
         ],
         "step_count": 0,
+        "tool_call_count": 0,
         "satisfied": False,
         "corp_findings": [],
         "web_findings": [],
@@ -700,14 +781,15 @@ def run(query: str) -> None:
     print("=" * 60)
 
     graph = build_graph()
-    final_state = graph.invoke(state)
+    final_state = graph.invoke(state, config={"recursion_limit": GRAPH_RECURSION_LIMIT})
+    final_state, final_answer = ensure_final_answer(final_state)
 
     print("\n" + "=" * 60)
     print("最終回答:\n")
-    for message in reversed(final_state["messages"]):
-        if isinstance(message, AIMessage) and not getattr(message, "tool_calls", None):
-            print(message.content)
-            break
+    if final_answer:
+        print(final_answer)
+    else:
+        print("Final Answer: 十分な情報が得られませんでした。")
 
     print(f"\n信頼度: {final_state['confidence']:.2f}")
     print(f"社内データ: {len(final_state['corp_findings'])} 件")
@@ -715,10 +797,7 @@ def run(query: str) -> None:
 
     # 標準化されたサマリー出力
     steps = final_state["step_count"]
-
-    # tool_calls: ツール呼び出しの回数を数える
-    tool_calls = sum(1 for msg in final_state["messages"]
-                     if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None))
+    tool_calls = final_state.get("tool_call_count", 0)
 
     # sources: 取得したソースの数（社内データ + Web データ）
     sources = len(final_state['corp_findings']) + len(final_state['web_findings'])
@@ -753,6 +832,7 @@ def main() -> None:
                 HumanMessage(content=query),
             ],
             "step_count": 0,
+            "tool_call_count": 0,
             "satisfied": False,
             "corp_findings": [],
             "web_findings": [],
@@ -764,22 +844,22 @@ def main() -> None:
         print(f"質問: {query}")
         print("=" * 60)
 
-        final_state = graph.invoke(state)
+        final_state = graph.invoke(state, config={"recursion_limit": GRAPH_RECURSION_LIMIT})
+        final_state, final_answer = ensure_final_answer(final_state)
 
         print("\n" + "=" * 60)
         print("最終回答:\n")
-        for message in reversed(final_state["messages"]):
-            if isinstance(message, AIMessage) and not getattr(message, "tool_calls", None):
-                print(message.content)
-                break
+        if final_answer:
+            print(final_answer)
+        else:
+            print("Final Answer: 十分な情報が得られませんでした。")
         print(f"\n信頼度: {final_state['confidence']:.2f}")
         print(f"社内データ: {len(final_state['corp_findings'])} 件")
         print(f"Web データ: {len(final_state['web_findings'])} 件")
 
         # 標準化されたサマリー出力
         steps = final_state["step_count"]
-        tool_calls = sum(1 for msg in final_state["messages"]
-                         if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None))
+        tool_calls = final_state.get("tool_call_count", 0)
         sources = len(final_state['corp_findings']) + len(final_state['web_findings'])
         satisfied = final_state["satisfied"]
 
