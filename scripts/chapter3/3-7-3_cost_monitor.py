@@ -91,7 +91,7 @@ def cost_aware_chat(prompt: str, model: str = DEFAULT_MODEL):
 
 # デモ実行
 if __name__ == "__main__":
-    if os.getenv("OPENAI_API_KEYa"):
+    if os.getenv("OPENAI_API_KEY"):
         result = cost_aware_chat("こんにちは", model=DEFAULT_MODEL)
         print(f"回答: {result}")
     else:
