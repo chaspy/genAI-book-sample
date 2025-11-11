@@ -217,16 +217,34 @@ def main(
 
     print("\n" + "=" * 60)
     print("最終回答:\n")
-    if final_answer:
-        print(final_answer)
-    else:
-        print("Final Answer: 回答を生成できませんでした。")
+    print(result.get("output", ""))
 
-    tool_messages = [m for m in messages if isinstance(m, ToolMessage)]
-    tool_calls = len(tool_messages)
-    steps = tool_calls
-    sources = summarize_sources(tool_messages)
-    satisfied = final_answer.startswith("Final Answer:")
+    # 標準化されたサマリー出力
+    # steps: 実行したイテレーション数
+    steps = len(result.get("intermediate_steps", []))
+
+    # tool_calls: ツール呼び出しの回数
+    tool_calls = sum(1 for step in result.get("intermediate_steps", [])
+                     if len(step) >= 2 and step[0] is not None)
+
+    # sources: 取得したソース数（検索結果のURLを数える）
+    sources = 0
+    for step in result.get("intermediate_steps", []):
+        if len(step) >= 2 and step[1] is not None:
+            # ToolMessage の内容を解析
+            import json
+            try:
+                if isinstance(step[1], dict):
+                    results = step[1].get("results", [])
+                    sources += len(results)
+                elif isinstance(step[1], str):
+                    data = json.loads(step[1])
+                    sources += len(data.get("results", []))
+            except:
+                pass
+
+    # satisfied: 何らかの最終回答が生成されたかどうか
+    satisfied = bool(result.get("output"))
 
     print(
         f"\n[Summary] steps={steps} tool_calls={tool_calls} sources={sources} "

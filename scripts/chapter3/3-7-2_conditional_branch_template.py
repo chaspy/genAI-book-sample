@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 import os
 from openai import OpenAI
 
-# 環境変数の読み込み
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -30,7 +29,6 @@ def build_explanation_prompt(user_role, user_level="beginner", language="ja"):
 
     return template.format(language=lang, role=role, level=level, topic="機械学習の基礎")
 
-
 def run_example(user_role, user_level, language):
     """プロンプトを生成し、モデルに投げて結果を表示"""
     prompt = build_explanation_prompt(user_role, user_level, language)
@@ -43,7 +41,6 @@ def run_example(user_role, user_level, language):
     print(prompt)
     print("=== 出力結果 ===")
     print(response.choices[0].message.content.strip())
-
 
 # パターン1: 営業担当者向け・初心者・日本語
 run_example(user_role="sales", user_level="beginner", language="ja")

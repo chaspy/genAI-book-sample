@@ -1,66 +1,103 @@
 import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.chat_history import InMemoryChatMessageHistory
 
 load_dotenv()
 
+llm = ChatOpenAI(
+    model="gpt-5-nano",
+    api_key=os.getenv('OPENAI_API_KEY'),
+)
+
 class FAQManager:
-    def __init__(self, llm: ChatOpenAI):
-        self.llm = llm
-        self.faqs = []  # FAQデータを保持（例: [{"q": "質問", "a": "回答"}]）
-        # プロンプトテンプレートを定義
-        self.prompt = ChatPromptTemplate.from_messages([
-            ("system", "以下のFAQを参考に、質問に適切な回答を日本語で出力してください。"),
-            ("human", "FAQ候補:\n{faq_block}\n\nユーザー質問: {question}")
-        ])
-        # プロンプト → LLM → 出力を文字列として受け取るチェーンを作成
-        self.chain = self.prompt | self.llm | StrOutputParser()
+    def __init__(self):
+        self.faq_list = []
 
-    def add(self, q: str, a: str):
-        """FAQアイテムを追加するメソッド"""
-        self.faqs.append({"q": q, "a": a})
+    def add(self, question: str, answer: str):
+        """FAQを追加"""
+        self.faq_list.append({"question": question, "answer": answer})
 
-    def _search(self, question: str) -> list:
-        """FAQを検索する簡易処理（キーワードマッチング）"""
-        import re
-        results = []
-        # ユーザー質問を単語に分割
-        question_words = set(re.findall(r'[ア-ンa-zA-Z0-9]+', question.lower()))
+    def format_for_prompt(self) -> str:
+        """プロンプト用にFAQをフォーマット"""
+        if not self.faq_list:
+            return ""
 
-        for item in self.faqs:
-            # FAQの質問と回答をまとめて検索対象にする
-            content = (item["q"] + " " + item["a"]).lower()
-            faq_words = set(re.findall(r'[ア-ンa-zA-Z0-9]+', content))
-
-            # ユーザー質問とFAQの単語に共通部分があればヒットとみなす
-            if question_words & faq_words:
-                results.append(item)
-        return results[:3]  # 最大3件まで返す
-
-    def answer(self, question: str) -> str:
-        """ユーザーの質問に対して回答を生成する"""
-        hits = self._search(question)
-        if not hits:
-            return "該当するFAQが見つかりませんでした。"
-
-        # ヒットしたFAQを文字列にまとめてプロンプトに埋め込む
-        faq_block = "\n".join([f"Q: {item['q']}\nA: {item['a']}" for item in hits])
-
-        # LLMに問い合わせて回答を生成
-        return self.chain.invoke({
-            "faq_block": faq_block,
-            "question": question
-        })
-
-llm = ChatOpenAI(model="gpt-5-nano", api_key=os.getenv('OPENAI_API_KEY'))
-faq = FAQManager(llm)
+        faq_text = "\n\n以下は事前に登録されているFAQです:\n\n"
+        for i, item in enumerate(self.faq_list, 1):
+            faq_text += f"Q{i}: {item['question']}\nA{i}: {item['answer']}\n\n"
+        return faq_text
 
 # FAQを登録
-faq.add("インストール手順", "セットアップウィザードを起動し、画面の指示に従ってください。")
-faq.add("アンインストール方法", "コントロールパネルからアプリを選択し、アンインストールを実行します。")
+faq = FAQManager()
+faq.add("有給休暇の申請方法", "勤怠管理システムから申請してください。直属の上司の承認が必要です。3日以上の連続休暇は1ヶ月前までに申請をお願いします。残日数は人事ポータルで確認できます。")
+faq.add("交通費の精算方法", "経費精算システムから精算を行ってください。領収書（ICカードの履歴でも可）をアップロードし、訪問先・目的を記入してください。月末締めで翌月給与と一緒に振り込まれます。")
 
-# ユーザーからの質問
-question = "インストール方法が知りたい"
-print(faq.answer(question))
+# プロンプト（役割＋FAQ＋履歴＋ユーザー入力）
+system_message = f"あなたは社内サポート用チャットボットです。400字以内で丁寧かつ正確に回答してください。{faq.format_for_prompt()}ユーザーの質問がFAQに該当する場合は、FAQの情報を基に回答してください。"
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", system_message),
+    MessagesPlaceholder("chat_history"),
+    ("human", "{input}")
+])
+
+# チェーン（プロンプト→LLM）
+chain = prompt | llm
+
+# メッセージ履歴（セッションごとに管理）
+store: dict[str, InMemoryChatMessageHistory] = {}
+
+def get_session_history(session_id: str) -> InMemoryChatMessageHistory:
+    if session_id not in store:
+        store[session_id] = InMemoryChatMessageHistory()
+    return store[session_id]
+
+# 会話用ラッパー
+chatbot = RunnableWithMessageHistory(
+    chain,
+    get_session_history,
+    input_messages_key="input",
+    history_messages_key="chat_history"
+)
+
+# 対話モード
+def chat_mode():
+    print("=== 社内サポートチャットボット (FAQ対応) ===")
+    print("質問を入力してください。終了するには 'quit' または 'exit' と入力してください。\n")
+
+    session_id = "demo-user-1"
+
+    while True:
+        try:
+            # ユーザー入力を取得
+            user_input = input("あなた: ").strip()
+
+            # 終了条件
+            if user_input.lower() in ['quit', 'exit', 'q', '終了']:
+                print("チャットを終了します。")
+                break
+
+            # 空入力をスキップ
+            if not user_input:
+                continue
+
+            # チャットボットに送信
+            result = chatbot.invoke(
+                {"input": user_input},
+                config={"configurable": {"session_id": session_id}}
+            )
+
+            # 回答を表示
+            print(f"ボット: {result.content}\n")
+
+        except KeyboardInterrupt:
+            print("\n\nチャットを終了します。")
+            break
+        except Exception as e:
+            print(f"エラーが発生しました: {e}\n")
+
+if __name__ == "__main__":
+    chat_mode()
