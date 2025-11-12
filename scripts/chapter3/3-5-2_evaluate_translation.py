@@ -34,7 +34,7 @@ def evaluate_translation(original: str, translated: str) -> dict:
             messages=[
                 {"role": "user", "content": evaluation_prompt}
             ],
-            temperature=0.1
+            temperature=0
         )
 
         import json
