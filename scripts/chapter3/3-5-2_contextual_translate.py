@@ -30,13 +30,13 @@ def contextual_translate(text, context=""):
 # 使用例
 text = "Before starting the maintenance work, please disconnect the power supply, check that all moving parts have come to a complete stop, and make sure the surrounding area is free from obstacles. Always wear protective gloves and safety goggles, as unexpected sparks or sharp edges may cause injury."
 
-# 小説風に翻訳
+# ビジネス風に翻訳
 context_novel = "ビジネス文書風で翻訳してください。"
 result_novel = contextual_translate(text, context_novel)
 print("=== ビジネス文書風翻訳 ===")
 print(result_novel)
 
-# 技術文書風に翻訳
+# カジュアル風に翻訳
 context_tech = "カジュアル風で翻訳してください。"
 result_tech = contextual_translate(text, context_tech)
 print("\n=== カジュアル風翻訳 ===")

@@ -25,6 +25,6 @@ def controlled_chat(prompt, max_completion_tokens=100):
         return None
 
 # 使用例
-prompt = "Pythonプログラミングについて説明してください"
-result = controlled_chat(prompt, max_completion_tokens=50)
+prompt = "Pythonプログラミングについて、200文字以内で説明してください"
+result = controlled_chat(prompt, max_completion_tokens=300)
 print(f"回答: {result}")
