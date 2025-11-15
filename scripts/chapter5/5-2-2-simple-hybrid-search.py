@@ -15,7 +15,7 @@ from rank_bm25 import BM25Okapi
 from langchain_openai import OpenAIEmbeddings
 from typing import List, Dict, Tuple
 from pathlib import Path
-
+from dotenv import load_dotenv
 
 def prepare_documents() -> Tuple[List[str], str]:
     """サンプル文書とクエリを準備"""
@@ -153,6 +153,9 @@ def save_result(filename: str, content: str):
 
 def main():
     """メイン処理"""
+    # .envファイルから環境変数を読み込み
+    load_dotenv()
+
     print("第5章 5.2節 - ハイブリッド検索の簡単なデモ")
     print("=" * 60)
 
