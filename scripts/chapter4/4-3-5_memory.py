@@ -16,7 +16,7 @@ llm = ChatOpenAI(
 
 # プロンプトテンプレートを作成
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "あなたは親切なアシスタントです。"),
+    ("system", "あなたは親切なアシスタントです。回答は200文字以内でしてください。"),
     MessagesPlaceholder(variable_name="history"),
     ("human", "{input}")
 ])
@@ -41,12 +41,32 @@ chain_with_history = RunnableWithMessageHistory(
 # 会話を実行
 config = {"configurable": {"session_id": "abc123"}}
 
-print(chain_with_history.invoke(
-    {"input": "こんにちは！私は田中といいます。普段はエンジニアとして働いています。趣味はキャンプです。"},
+# 1回目の会話：自己紹介
+print("【1回目の会話】")
+input_text1 = "こんにちは！私は田中といいます。普段はエンジニアとして働いています。趣味はキャンプです。"
+response1 = chain_with_history.invoke(
+    {"input": input_text1},
     config=config
-).content)
+)
+print("ユーザー: " + input_text1)
+print(f"アシスタント: {response1.content}")
 
-print(chain_with_history.invoke(
-    {"input": "さっきの自己紹介を要約して。"},
+# 2回目の会話：週末の過ごし方の相談
+print("\n【2回目の会話】")
+input_text2 = "週末の過ごし方のアドバイスをください。"
+response2 = chain_with_history.invoke(
+    {"input": input_text2},
     config=config
-).content)
+)
+print("ユーザー: " + input_text2)
+print(f"アシスタント: {response2.content}")
+
+# 3回目の会話：おすすめの本の相談
+print("\n【3回目の会話】")
+input_text3 = "おすすめの本を教えてください。"
+response3 = chain_with_history.invoke(
+    {"input": input_text3},
+    config=config
+)
+print("ユーザー: " + input_text3)
+print(f"アシスタント: {response3.content}")
