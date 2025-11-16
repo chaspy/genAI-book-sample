@@ -17,13 +17,13 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.retrievers import BM25Retriever
+from langchain_classic.retrievers import EnsembleRetriever
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from hybrid_rrf import ReciprocalRankFusion
 
 
 def load_company_documents(data_dir: str = "company_docs") -> List[Document]:
@@ -135,9 +135,10 @@ def create_rag_pipeline(
 
         dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
 
-        hybrid_retriever = ReciprocalRankFusion(
+        hybrid_retriever = EnsembleRetriever(
             retrievers=[bm25_retriever, dense_retriever],
-            weights=[0.6, 1.0]
+            weights=[0.6, 1.0],
+            c=60,
         )
 
         context_runnable = RunnableLambda(
@@ -171,8 +172,8 @@ def create_rag_pipeline(
 2. 参考文書にない情報は推測せず、「文書に記載がありません」と回答してください
 3. 可能な場合は、具体的な章・節番号を含めて回答してください
    例: 「勤怠規定第3章第1節によると...」
-4. 回答の最後に、参照した出典情報を明記してください
-   例: 【参照: 勤怠規定 第3章第1節】
+4. 回答の最後に、参照した出典情報を【出典: 章節名】の形で明記してください
+   例: 【出典: 勤怠規定 第3章第1節】
 
 回答："""
 

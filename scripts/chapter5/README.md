@@ -265,7 +265,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 1. **基礎理解**: `minimal_rag_chroma.py` から始めて、RAGの基本的な流れを理解
 2. **ベクトル検索の深掘り**: `faiss_langchain_demo.py` でインデックスの仕組みを学習
-3. **検索手法の比較**: `hybrid_rrf_ensemble.py` で各手法の特徴を理解
+3. **検索手法の比較**: `5-5-1-hybrid-search-rrf.py` で各手法の特徴を理解
 4. **統合実装**: `run_pipeline.py` で実用的なRAGシステムを体験
 
 ## 参考資料
