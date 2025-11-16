@@ -36,3 +36,5 @@ Thumbs.db
 # outputs/  # コミット対象のためコメントアウト
 *.log
 *.tmp
+
+results/
