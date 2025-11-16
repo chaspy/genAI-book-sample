@@ -14,48 +14,12 @@ from dotenv import load_dotenv
 
 # LangChain関連のインポート
 from langchain_community.retrievers import BM25Retriever
-# EnsembleRetriever は環境によって提供先が異なるため、なければ簡易実装にフォールバック
-try:
-    from langchain_community.retrievers import EnsembleRetriever  # 一部バージョン
-except Exception:
-    try:
-        from langchain.retrievers import EnsembleRetriever  # 旧 namespace
-    except Exception:
-        EnsembleRetriever = None
+from langchain_classic.retrievers import EnsembleRetriever
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-
-# EnsembleRetriever が環境に無い場合の簡易 RRF フォールバック
-if EnsembleRetriever is None:
-    from collections import defaultdict
-
-    class EnsembleRetriever:
-        """Reciprocal Rank Fusion による簡易ハイブリッド検索"""
-
-        def __init__(self, retrievers, weights=None, c: int = 60):
-            if not retrievers:
-                raise ValueError("retrievers は1件以上必要です")
-            if weights is None:
-                weights = [1.0] * len(retrievers)
-            if len(weights) != len(retrievers):
-                raise ValueError("weights と retrievers の長さを揃えてください")
-            self.retrievers = retrievers
-            self.weights = weights
-            self.c = c  # RRF の k
-
-        def invoke(self, query: str):
-            scores = defaultdict(float)
-            docs_map = {}
-            for weight, retriever in zip(self.weights, self.retrievers):
-                for rank, doc in enumerate(retriever.invoke(query), start=1):
-                    key = (doc.metadata.get("source"), doc.page_content)
-                    docs_map.setdefault(key, doc)
-                    scores[key] += weight / (self.c + rank)
-            fused = sorted(docs_map.items(), key=lambda kv: scores[kv[0]], reverse=True)
-            return [doc for _, doc in fused]
 
 
 def load_documents_from_files() -> List[Document]:
