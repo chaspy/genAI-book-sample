@@ -13,14 +13,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # LangChain関連のインポート
-from langchain_community.retrievers import BM25Retriever
+from langchain_community.retrievers import BM25Retriever, EnsembleRetriever
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-
-from hybrid_rrf import ReciprocalRankFusion
 
 
 def load_documents_from_files() -> List[Document]:
@@ -93,9 +91,8 @@ def compare_retrieval_methods(splits: List[Document]):
 
     # テストクエリ
     queries = [
-        "BM25アルゴリズム k1パラメータ",  # 固有名詞・技術用語（BM25が有利）
-        "検索の性能を改善する方法",  # 意味的クエリ（ベクトルが有利）
-        "RAG最適化 Dense Retrieval",  # 混合クエリ（ハイブリッドが有利）
+        "Elasticsearchの監視設定",  # 固有名詞・技術用語（BM25が有利）
+        "RAGを最適化するにはDense Retrievalをどう使う？",
     ]
 
     for query in queries:
@@ -151,11 +148,12 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
     )
     dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
 
-    # EnsembleRetrieverでハイブリッド検索を構築
-    # weights: 各Retrieverの重み付け（合計が1である必要はない）
-    hybrid_retriever = ReciprocalRankFusion(
+    # EnsembleRetrieverでハイブリッド検索を構築（内部でRRF）
+    # weights: 各Retrieverの重み付け（合計1でなくてよい）
+    hybrid_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, dense_retriever],
-        weights=[0.6, 1.0]  # BM25を少し抑えめ、ベクトルを重視
+        weights=[0.6, 1.0],  # BM25を少し抑えめ、ベクトルを重視
+        c=60,               # RRFのk（高順位をどれだけ強調するか）
     )
 
     # テストクエリ
@@ -211,9 +209,10 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         print("-" * 40)
 
         # 異なる重み付けでEnsembleRetrieverを構築
-        weighted_hybrid = ReciprocalRankFusion(
+        weighted_hybrid = EnsembleRetriever(
             retrievers=[bm25_retriever, dense_retriever],
-            weights=[bm25_w, vec_w]
+            weights=[bm25_w, vec_w],
+            c=60,
         )
 
         results = weighted_hybrid.invoke(query)

@@ -16,14 +16,13 @@ from dotenv import load_dotenv
 # LangChain関連のインポート
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_community.retrievers import BM25Retriever
+from langchain_community.retrievers import BM25Retriever, EnsembleRetriever
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from hybrid_rrf import ReciprocalRankFusion
 
 
 def load_company_documents(data_dir: str = "company_docs") -> List[Document]:
@@ -135,9 +134,10 @@ def create_rag_pipeline(
 
         dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
 
-        hybrid_retriever = ReciprocalRankFusion(
+        hybrid_retriever = EnsembleRetriever(
             retrievers=[bm25_retriever, dense_retriever],
-            weights=[0.6, 1.0]
+            weights=[0.6, 1.0],
+            c=60,
         )
 
         context_runnable = RunnableLambda(
