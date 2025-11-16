@@ -204,14 +204,5 @@ def main():
     # 結果を保存
     save_result("5-2-2_hybrid_search.txt", "\n".join(output))
 
-    print("\n" + "=" * 60)
-    print("解説:")
-    print("- キーワード検索: 単語の完全一致を重視")
-    print("- ベクトル検索: 意味の類似性を重視")
-    print("- ハイブリッド検索: 両方の結果をRRFで統合")
-    print("  → 両方で上位の文書が最終的に高スコアに！")
-    print("=" * 60)
-
-
 if __name__ == "__main__":
     main()
