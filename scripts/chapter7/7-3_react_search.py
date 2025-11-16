@@ -212,12 +212,14 @@ def main(
     messages = result.get("messages", [])
     final_message = next((m for m in reversed(messages) if isinstance(m, AIMessage)), None)
     final_answer = _content_to_text(final_message.content).strip() if final_message else ""
+    if not final_answer:
+        final_answer = _content_to_text(result.get("output", "")).strip() if result.get("output") else ""
     if final_answer and not final_answer.startswith("Final Answer:"):
         final_answer = f"Final Answer: {final_answer}"
 
     print("\n" + "=" * 60)
     print("最終回答:\n")
-    print(result.get("output", ""))
+    print(final_answer)
 
     # 標準化されたサマリー出力
     # steps: 実行したイテレーション数
@@ -244,7 +246,7 @@ def main(
                 pass
 
     # satisfied: 何らかの最終回答が生成されたかどうか
-    satisfied = bool(result.get("output"))
+    satisfied = bool(final_answer)
 
     print(
         f"\n[Summary] steps={steps} tool_calls={tool_calls} sources={sources} "
