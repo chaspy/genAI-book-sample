@@ -9,42 +9,48 @@
       "matchFileNames": [
         "scripts/chapter2/**"
       ],
-      "groupName": "chapter2 dependencies"
+      "groupName": "chapter2 dependencies",
+      "additionalBranchPrefix": "chapter2-"
     },
     {
       "description": "Keep chapter3 dependency updates in their own Renovate branch and PR.",
       "matchFileNames": [
         "scripts/chapter3/**"
       ],
-      "groupName": "chapter3 dependencies"
+      "groupName": "chapter3 dependencies",
+      "additionalBranchPrefix": "chapter3-"
     },
     {
       "description": "Keep chapter4 dependency updates in their own Renovate branch and PR.",
       "matchFileNames": [
         "scripts/chapter4/**"
       ],
-      "groupName": "chapter4 dependencies"
+      "groupName": "chapter4 dependencies",
+      "additionalBranchPrefix": "chapter4-"
     },
     {
       "description": "Keep chapter5 dependency updates in their own Renovate branch and PR.",
       "matchFileNames": [
         "scripts/chapter5/**"
       ],
-      "groupName": "chapter5 dependencies"
+      "groupName": "chapter5 dependencies",
+      "additionalBranchPrefix": "chapter5-"
     },
     {
       "description": "Keep chapter6 dependency updates in their own Renovate branch and PR.",
       "matchFileNames": [
         "scripts/chapter6/**"
       ],
-      "groupName": "chapter6 dependencies"
+      "groupName": "chapter6 dependencies",
+      "additionalBranchPrefix": "chapter6-"
     },
     {
       "description": "Keep chapter7 dependency updates in their own Renovate branch and PR.",
       "matchFileNames": [
         "scripts/chapter7/**"
       ],
-      "groupName": "chapter7 dependencies"
+      "groupName": "chapter7 dependencies",
+      "additionalBranchPrefix": "chapter7-"
     }
   ]
 }
