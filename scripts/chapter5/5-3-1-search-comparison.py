@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
-第5章 5.2節 検索の基礎：キーワード検索 vs ベクトル検索 - 比較デモ
+第5章 5.3節 検索の基礎：キーワード検索 vs ベクトル検索 - 比較デモ
 
 このスクリプトは、キーワード検索とベクトル検索の違いを実際に体験するためのデモです。
 著者が執筆時点（2025年9月）にOpenAI API (gpt-5-nano)を使用して実行・検証したものです。
 
 実行方法:
-    uv run python 5-2-1-search-comparison.py
+    uv run python 5-3-1-search-comparison.py
 """
 
 import os
@@ -111,7 +111,7 @@ def demo_keyword_search(documents: List[str], query: str):
     output.append(f"\n最も関連する文書: 文書{best_idx + 1}")
     output.append(f"内容: {documents[best_idx]}")
 
-    save_result("5-2-1_keyword_search.txt", "\n".join(output))
+    save_result("5-3-1_keyword_search.txt", "\n".join(output))
 
 
 def demo_vector_search(documents: List[str], query: str):
@@ -167,7 +167,7 @@ def demo_vector_search(documents: List[str], query: str):
         output.append(f"\n最も関連する文書: 文書{best_idx + 1}")
         output.append(f"内容: {documents[best_idx]}")
 
-        save_result("5-2-1_vector_search.txt", "\n".join(output))
+        save_result("5-3-1_vector_search.txt", "\n".join(output))
 
     except Exception as e:
         print(f"エラーが発生しました: {e}")
@@ -177,7 +177,7 @@ def main():
     # .envファイルから環境変数を読み込み
     load_dotenv()
 
-    print("第5章 5.2節 - キーワード検索 vs ベクトル検索の比較デモ")
+    print("第5章 5.3節 - キーワード検索 vs ベクトル検索の比較デモ")
     print("※ベクトル検索はOpenAI APIキーが必要です")
     print("")
 
@@ -198,7 +198,7 @@ def main():
     summary.append("• ベクトル検索: 意味の類似性を重視（自然言語の質問に最適）")
     summary.append("• ハイブリッド検索: 両方のいいとこ取り（実用的な選択）")
 
-    save_result("5-2-1_summary.txt", "\n".join(summary))
+    save_result("5-3-1_summary.txt", "\n".join(summary))
 
     print("\n" + "=" * 60)
     print("全ての結果をresults/ディレクトリに保存しました")
