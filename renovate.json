@@ -2,5 +2,49 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "description": "Keep chapter2 dependency updates in their own Renovate branch and PR.",
+      "matchFileNames": [
+        "scripts/chapter2/**"
+      ],
+      "groupName": "chapter2 dependencies"
+    },
+    {
+      "description": "Keep chapter3 dependency updates in their own Renovate branch and PR.",
+      "matchFileNames": [
+        "scripts/chapter3/**"
+      ],
+      "groupName": "chapter3 dependencies"
+    },
+    {
+      "description": "Keep chapter4 dependency updates in their own Renovate branch and PR.",
+      "matchFileNames": [
+        "scripts/chapter4/**"
+      ],
+      "groupName": "chapter4 dependencies"
+    },
+    {
+      "description": "Keep chapter5 dependency updates in their own Renovate branch and PR.",
+      "matchFileNames": [
+        "scripts/chapter5/**"
+      ],
+      "groupName": "chapter5 dependencies"
+    },
+    {
+      "description": "Keep chapter6 dependency updates in their own Renovate branch and PR.",
+      "matchFileNames": [
+        "scripts/chapter6/**"
+      ],
+      "groupName": "chapter6 dependencies"
+    },
+    {
+      "description": "Keep chapter7 dependency updates in their own Renovate branch and PR.",
+      "matchFileNames": [
+        "scripts/chapter7/**"
+      ],
+      "groupName": "chapter7 dependencies"
+    }
   ]
 }
