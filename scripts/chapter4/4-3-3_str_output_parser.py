@@ -17,12 +17,6 @@ model = ChatOpenAI(
     api_key=os.getenv('OPENAI_API_KEY')
 )
 
-# 出力パーサー
-parser = StrOutputParser()
-
-# Chain: プロンプト → モデル → パーサー
-chain = prompt | model | parser
-
 target_text = """
 LangChainは、大規模言語モデル（LLM）を活用したアプリケーション開発を支援するフレームワークです。
 プロンプト設計や会話履歴の管理、外部データ検索、APIとの連携などをモジュール化して提供し、
@@ -30,6 +24,22 @@ LangChainは、大規模言語モデル（LLM）を活用したアプリケー�
 チャットボットやRAGといった実用システム開発を効率化します。
 """
 
+print("【StrOutputParserを使用しない場合】")
+
+# Chain: プロンプト → モデル（パーサーなし）
+chain_without_parser = prompt | model
+
 # 実行
-result = chain.invoke({"text": target_text})
-print(result)
+result_without_parser = chain_without_parser.invoke({"text": target_text})
+print(f"結果: {result_without_parser}")
+
+print("\n【StrOutputParserを使用した場合】")
+# 出力パーサー
+parser = StrOutputParser()
+
+# Chain: プロンプト → モデル → パーサー
+chain_with_parser = prompt | model | parser
+
+# 実行
+result_with_parser = chain_with_parser.invoke({"text": target_text})
+print(f"結果: {result_with_parser}")
