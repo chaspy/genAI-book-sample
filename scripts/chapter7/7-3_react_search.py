@@ -231,31 +231,6 @@ def compute_summary_stats(result: dict, final_answer: str) -> tuple[int, int, in
     return steps, tool_calls, sources
 
 
-def summarize_sources(tool_messages: Iterable[ToolMessage]) -> int:
-    """ツール応答から result URL 数を推定する"""
-    total = 0
-    for message in tool_messages:
-        payload = message.content
-        data = None
-        if isinstance(payload, dict):
-            data = payload
-        elif isinstance(payload, str):
-            try:
-                data = json.loads(payload)
-            except json.JSONDecodeError:
-                data = None
-        elif isinstance(payload, list):
-            for block in payload:
-                if isinstance(block, dict) and "json" in block:
-                    data = block.get("json")
-                    break
-        if isinstance(data, dict):
-            results = data.get("results", [])
-            if isinstance(results, list):
-                total += len(results)
-    return total
-
-
 def main(
     query: Optional[str] = None,
     model: str = "gpt-4o-mini",
