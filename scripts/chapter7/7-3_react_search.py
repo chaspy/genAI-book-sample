@@ -158,29 +158,68 @@ def _content_to_text(content: object) -> str:
     return str(content)
 
 
-def summarize_sources(tool_messages: Iterable[ToolMessage]) -> int:
-    """ツール応答から result URL 数を推定する"""
-    total = 0
-    for message in tool_messages:
-        payload = message.content
-        data = None
-        if isinstance(payload, dict):
-            data = payload
-        elif isinstance(payload, str):
-            try:
-                data = json.loads(payload)
-            except json.JSONDecodeError:
-                data = None
-        elif isinstance(payload, list):
-            for block in payload:
-                if isinstance(block, dict) and "json" in block:
+def _extract_result_count(payload: object) -> int:
+    """ToolMessage などの payload から results 配列の長さを取得する"""
+    data = None
+    if isinstance(payload, dict):
+        data = payload
+    elif isinstance(payload, str):
+        try:
+            data = json.loads(payload)
+        except json.JSONDecodeError:
+            data = None
+    elif isinstance(payload, list):
+        for block in payload:
+            if isinstance(block, dict):
+                if "json" in block:
                     data = block.get("json")
                     break
-        if isinstance(data, dict):
-            results = data.get("results", [])
-            if isinstance(results, list):
-                total += len(results)
-    return total
+                if block.get("type") == "json" and "content" in block:
+                    data = block.get("content")
+                    break
+    if isinstance(data, dict):
+        results = data.get("results", [])
+        if isinstance(results, list):
+            return len(results)
+    return 0
+
+
+def summarize_sources(tool_messages: Iterable[ToolMessage]) -> int:
+    """ツール応答から result URL 数を推定する"""
+    return sum(_extract_result_count(message.content) for message in tool_messages)
+
+
+def compute_summary_stats(result: dict, final_answer: str) -> tuple[int, int, int]:
+    """steps / tool_calls / sources を LangGraph から推定する"""
+    intermediate_steps = result.get("intermediate_steps") or []
+    if intermediate_steps:
+        steps = len(intermediate_steps)
+        tool_calls = sum(
+            1
+            for step in intermediate_steps
+            if isinstance(step, (list, tuple)) and len(step) >= 2 and step[0] is not None
+        )
+        sources = 0
+        for step in intermediate_steps:
+            if isinstance(step, (list, tuple)) and len(step) >= 2 and step[1] is not None:
+                sources += _extract_result_count(step[1])
+        return steps, tool_calls, sources
+
+    # LangGraph v1 create_agent は intermediate_steps を返さないため、messages から推定する
+    messages = result.get("messages", [])
+    tool_messages = [m for m in messages if isinstance(m, ToolMessage)]
+    tool_calls = len(tool_messages)
+    sources = summarize_sources(tool_messages)
+
+    ai_messages = [m for m in messages if isinstance(m, AIMessage)]
+    action_messages = [m for m in ai_messages if getattr(m, "tool_calls", None)]
+    if action_messages:
+        steps = len(action_messages) + tool_calls
+    else:
+        steps = tool_calls * 2 if tool_calls else 0
+        if final_answer:
+            steps += 1
+    return steps, tool_calls, sources
 
 
 def main(
@@ -222,28 +261,7 @@ def main(
     print(final_answer)
 
     # 標準化されたサマリー出力
-    # steps: 実行したイテレーション数
-    steps = len(result.get("intermediate_steps", []))
-
-    # tool_calls: ツール呼び出しの回数
-    tool_calls = sum(1 for step in result.get("intermediate_steps", [])
-                     if len(step) >= 2 and step[0] is not None)
-
-    # sources: 取得したソース数（検索結果のURLを数える）
-    sources = 0
-    for step in result.get("intermediate_steps", []):
-        if len(step) >= 2 and step[1] is not None:
-            # ToolMessage の内容を解析
-            import json
-            try:
-                if isinstance(step[1], dict):
-                    results = step[1].get("results", [])
-                    sources += len(results)
-                elif isinstance(step[1], str):
-                    data = json.loads(step[1])
-                    sources += len(data.get("results", []))
-            except:
-                pass
+    steps, tool_calls, sources = compute_summary_stats(result, final_answer)
 
     # satisfied: 何らかの最終回答が生成されたかどうか
     satisfied = bool(final_answer)
