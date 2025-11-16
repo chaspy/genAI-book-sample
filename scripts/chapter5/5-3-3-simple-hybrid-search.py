@@ -195,12 +195,6 @@ def main():
             print(content_line)
             output.append(content_line)
 
-            # 正解かどうかの判定
-            if "忘れた" in documents[doc_idx]:
-                check_line = "       ✓ 正解！（パスワードリセットに最も関連）"
-                print(check_line)
-                output.append(check_line)
-
     # 結果を保存
     save_result("5-2-2_hybrid_search.txt", "\n".join(output))
 
