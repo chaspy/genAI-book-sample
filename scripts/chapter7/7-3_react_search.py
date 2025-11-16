@@ -248,11 +248,14 @@ def main(
         )
         print(f"詳細: {exc}")
         return
+    # LangGraph create_agent は最終応答を messages の末尾 AIMessage にだけ格納する。
     messages = result.get("messages", [])
     final_message = next((m for m in reversed(messages) if isinstance(m, AIMessage)), None)
     final_answer = _content_to_text(final_message.content).strip() if final_message else ""
+    # 旧 AgentExecutor 互換のため result["output"] も一応参照（通常は空文字）
     if not final_answer:
         final_answer = _content_to_text(result.get("output", "")).strip() if result.get("output") else ""
+    # プロンプト違反で "Final Answer:" が付かないケースを補正する
     if final_answer and not final_answer.startswith("Final Answer:"):
         final_answer = f"Final Answer: {final_answer}"
 
