@@ -9,7 +9,6 @@
       "matchFileNames": [
         "scripts/chapter2/**"
       ],
-      "groupName": "chapter2 dependencies",
       "additionalBranchPrefix": "chapter2-"
     },
     {
@@ -17,7 +16,6 @@
       "matchFileNames": [
         "scripts/chapter3/**"
       ],
-      "groupName": "chapter3 dependencies",
       "additionalBranchPrefix": "chapter3-"
     },
     {
@@ -25,7 +23,6 @@
       "matchFileNames": [
         "scripts/chapter4/**"
       ],
-      "groupName": "chapter4 dependencies",
       "additionalBranchPrefix": "chapter4-"
     },
     {
@@ -33,7 +30,6 @@
       "matchFileNames": [
         "scripts/chapter5/**"
       ],
-      "groupName": "chapter5 dependencies",
       "additionalBranchPrefix": "chapter5-"
     },
     {
@@ -41,7 +37,6 @@
       "matchFileNames": [
         "scripts/chapter6/**"
       ],
-      "groupName": "chapter6 dependencies",
       "additionalBranchPrefix": "chapter6-"
     },
     {
@@ -49,7 +44,6 @@
       "matchFileNames": [
         "scripts/chapter7/**"
       ],
-      "groupName": "chapter7 dependencies",
       "additionalBranchPrefix": "chapter7-"
     }
   ]
