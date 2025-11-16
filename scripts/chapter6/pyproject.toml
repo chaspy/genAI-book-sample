@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "langfuse==3.4.0",
-    "openai==1.101.0",
-    "python-dotenv==1.1.1",
+    "langfuse==3.10.0",
+    "openai==1.109.1",
+    "python-dotenv==1.2.1",
 ]
