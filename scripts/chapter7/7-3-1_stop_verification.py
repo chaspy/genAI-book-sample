@@ -15,8 +15,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
-# outputs/ ディレクトリの自動作成
-Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parent
+OUTPUT_DIR = ROOT / "outputs"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 TOOLS_DESCRIPTION = """
 利用可能なツール一覧:

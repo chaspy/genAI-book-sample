@@ -19,8 +19,9 @@ from langchain_openai import ChatOpenAI
 from langchain_tavily import TavilySearch
 from langgraph.errors import GraphRecursionError
 
-# outputs/ ディレクトリの自動作成
-Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parent
+OUTPUT_DIR = ROOT / "outputs"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # LangGraph では LLM ステップと Tool ステップの両方がカウントされるため、
 # ReAct の 3～4 回のツール利用を許容するようデフォルト 12 ステップを確保しておく。
