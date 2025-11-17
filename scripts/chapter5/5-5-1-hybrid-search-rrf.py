@@ -76,7 +76,7 @@ def tokenize_for_bm25(text: str) -> list[str]:
             if len(chunk) == 1:
                 tokens.append(chunk)
             else:
-                tokens.extend(chunk[i : i + 2] for i in range(len(chunk) - 1))
+                tokens.extend(chunk[i: i + 2] for i in range(len(chunk) - 1))
     return tokens
 
 
@@ -113,10 +113,11 @@ def compare_retrieval_methods(splits: List[Document]):
     )
     dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
-    # テストクエリ
+    # テストクエリ（本文と同じ3件）
     queries = [
         "Elasticsearchの監視設定",  # 固有名詞・技術用語（BM25が有利）
-        "RAGを最適化するにはDense Retrievalをどう使う？",
+        "埋め込み検索のメリット",   # 意味的な問いかけ（BM25が弱いケースを確認）
+        "RAGを最適化するにはDense Retrievalをどう使う？",  # 専門用語を含む
     ]
 
     for query in queries:
