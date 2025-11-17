@@ -256,11 +256,6 @@ def main():
     # .envファイルから環境変数を読み込み
     load_dotenv()
 
-    # OpenAI APIキーの確認
-    if not os.getenv("OPENAI_API_KEY"):
-        print("エラー: OPENAI_API_KEY環境変数が設定されていません")
-        sys.exit(1)
-
     # サンプル文書の読み込み
     documents = load_documents_from_files()
     print(f"サンプル文書を{len(documents)}件読み込みました。")
