@@ -115,9 +115,9 @@ def compare_retrieval_methods(splits: List[Document]):
 
     # テストクエリ（本文と同じ3件）
     queries = [
-        "Elasticsearchの監視設定",  # 固有名詞・技術用語（BM25が有利）
-        "埋め込み検索のメリット",   # 意味的な問いかけ（BM25が弱いケースを確認）
-        "RAGを最適化するにはDense Retrievalをどう使う？",  # 専門用語を含む
+        "X-Pack monitoring の設定方法",                    # 固有名詞・製品名でBM25が有利
+        "セマンティック検索のメリット",                       # 抽象表現でベクトルが有利
+        "EnsembleRetriever で複数リトリーバを統合する利点",  # 重み比較で差が出やすい
     ]
 
     for query in queries:
@@ -219,9 +219,9 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
     print(output2[-1])
 
     weight_configs = [
-        (1.0, 0.1, "BM25重視"),
-        (1.0, 1.0, "均等"),
-        (0.2, 2.0, "ベクトル重視"),
+        (0.9, 0.1, "BM25重視"),
+        (0.5, 0.5, "均等"),
+        (0.1, 0.9, "ベクトル重視"),
     ]
 
     query = "RAGを最適化するにはDense Retrievalをどう使う？"  # 本文と同じクエリで比較

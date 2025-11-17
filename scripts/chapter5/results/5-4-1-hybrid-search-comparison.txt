@@ -1,28 +1,28 @@
 
 === 検索手法の比較 ===
 
-クエリ: 'Elasticsearchの監視設定'
-============================================================
-
-【BM25検索結果】
-  1. hybrid_doc_02.txt: Elasticsearchによる高性能検索システムの実装
-  2. hybrid_doc_01.txt: BM25アルゴリズムの実装詳細
-  3. hybrid_doc_05.txt: RAGシステムの最適化手法と実装戦略
-
-【ベクトル検索結果】
-  1. hybrid_doc_02.txt: Elasticsearchによる高性能検索システムの実装
-  2. hybrid_doc_04.txt: 開発者の生産性向上と創造的業務への集中
-  3. hybrid_doc_03.txt: 検索技術の進化と意味理解の革命
-
-------------------------------------------------------------
-
-クエリ: '埋め込み検索のメリット'
+クエリ: 'X-Pack monitoring の設定方法'
 ============================================================
 
 【BM25検索結果】
   1. hybrid_doc_02.txt: Elasticsearchによる高性能検索システムの実装
   2. hybrid_doc_05.txt: RAGシステムの最適化手法と実装戦略
-  3. hybrid_doc_04.txt: 開発者の生産性向上と創造的業務への集中
+  3. hybrid_doc_06.txt: LangChainのEnsembleRetrieverによる統合検索
+
+【ベクトル検索結果】
+  1. hybrid_doc_02.txt: Elasticsearchによる高性能検索システムの実装
+  2. hybrid_doc_04.txt: 開発者の生産性向上と創造的業務への集中
+  3. hybrid_doc_01.txt: BM25アルゴリズムの実装詳細
+
+------------------------------------------------------------
+
+クエリ: 'セマンティック検索のメリット'
+============================================================
+
+【BM25検索結果】
+  1. hybrid_doc_02.txt: Elasticsearchによる高性能検索システムの実装
+  2. hybrid_doc_04.txt: 開発者の生産性向上と創造的業務への集中
+  3. hybrid_doc_05.txt: RAGシステムの最適化手法と実装戦略
 
 【ベクトル検索結果】
   1. hybrid_doc_03.txt: 検索技術の進化と意味理解の革命
@@ -31,17 +31,17 @@
 
 ------------------------------------------------------------
 
-クエリ: 'RAGを最適化するにはDense Retrievalをどう使う？'
+クエリ: 'EnsembleRetriever で複数リトリーバを統合する利点'
 ============================================================
 
 【BM25検索結果】
-  1. hybrid_doc_05.txt: RAGシステムの最適化手法と実装戦略
-  2. hybrid_doc_03.txt: 検索技術の進化と意味理解の革命
-  3. hybrid_doc_02.txt: Elasticsearchによる高性能検索システムの実装
+  1. hybrid_doc_06.txt: LangChainのEnsembleRetrieverによる統合検索
+  2. hybrid_doc_05.txt: RAGシステムの最適化手法と実装戦略
+  3. hybrid_doc_04.txt: 開発者の生産性向上と創造的業務への集中
 
 【ベクトル検索結果】
-  1. hybrid_doc_05.txt: RAGシステムの最適化手法と実装戦略
-  2. hybrid_doc_03.txt: 検索技術の進化と意味理解の革命
-  3. hybrid_doc_06.txt: LangChainのEnsembleRetrieverによる統合検索
+  1. hybrid_doc_06.txt: LangChainのEnsembleRetrieverによる統合検索
+  2. hybrid_doc_05.txt: RAGシステムの最適化手法と実装戦略
+  3. hybrid_doc_03.txt: 検索技術の進化と意味理解の革命
 
 ------------------------------------------------------------
