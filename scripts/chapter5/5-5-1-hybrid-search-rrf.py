@@ -8,6 +8,7 @@ LangChainのEnsembleRetrieverを使用したハイブリッド検索の実装
 
 import os
 import sys
+import re
 from typing import List
 from pathlib import Path
 from dotenv import load_dotenv
@@ -60,6 +61,25 @@ def load_documents_from_files() -> List[Document]:
     return documents
 
 
+def tokenize_for_bm25(text: str) -> list[str]:
+    """
+    日本語を含むテキストを軽量にトークナイズする。
+    - 英数字はそのまま1トークン。
+    - 漢字・ひらがな・カタカナの連続部分は文字bi-gramに分解し、部分一致しやすくする。
+    """
+    tokens: list[str] = []
+    for chunk in re.findall(r"[A-Za-z0-9]+|[一-龥ぁ-んァ-ンー]+", text):
+        if re.fullmatch(r"[A-Za-z0-9]+", chunk):
+            tokens.append(chunk)
+        else:
+            # 日本語部分は bi-gram で分割して BM25 のヒット率を上げる
+            if len(chunk) == 1:
+                tokens.append(chunk)
+            else:
+                tokens.extend(chunk[i: i + 2] for i in range(len(chunk) - 1))
+    return tokens
+
+
 def save_result(filename: str, content: str):
     """結果をファイルに保存"""
     from pathlib import Path
@@ -78,7 +98,10 @@ def compare_retrieval_methods(splits: List[Document]):
     print(output[-1])
 
     # 1. BM25 Retrieverの構築
-    bm25_retriever = BM25Retriever.from_documents(splits)
+    bm25_retriever = BM25Retriever.from_documents(
+        splits,
+        preprocess_func=tokenize_for_bm25,
+    )
     bm25_retriever.k = 3
 
     # 2. ベクトル検索 Retrieverの構築
@@ -90,10 +113,10 @@ def compare_retrieval_methods(splits: List[Document]):
     )
     dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
-    # テストクエリ
+    # テストクエリ（本文と同じ2件）
     queries = [
-        "Elasticsearchの監視設定",  # 固有名詞・技術用語（BM25が有利）
-        "RAGを最適化するにはDense Retrievalをどう使う？",
+        "X-Pack monitoring の設定方法",                    # 固有名詞・製品名でBM25が有利
+        "セマンティック検索のメリット",                       # 抽象表現でベクトルが有利
     ]
 
     for query in queries:
@@ -107,18 +130,18 @@ def compare_retrieval_methods(splits: List[Document]):
         print("\n【BM25検索結果】")
         bm25_results = bm25_retriever.invoke(query)
         for i, doc in enumerate(bm25_results):
-            content = doc.page_content[:80] + "..."
-            output.append(f"  {i+1}. {doc.metadata['source']}: {content}")
-            print(f"  {i+1}. {doc.metadata['source']}: {content}")
+            title = doc.page_content.splitlines()[0]
+            output.append(f"  {i+1}. {doc.metadata['source']}: {title}")
+            print(f"  {i+1}. {doc.metadata['source']}: {title}")
 
         # ベクトル検索
         output.append("\n【ベクトル検索結果】")
         print("\n【ベクトル検索結果】")
         vector_results = dense_retriever.invoke(query)
         for i, doc in enumerate(vector_results):
-            content = doc.page_content[:80] + "..."
-            output.append(f"  {i+1}. {doc.metadata['source']}: {content}")
-            print(f"  {i+1}. {doc.metadata['source']}: {content}")
+            title = doc.page_content.splitlines()[0]
+            output.append(f"  {i+1}. {doc.metadata['source']}: {title}")
+            print(f"  {i+1}. {doc.metadata['source']}: {title}")
 
         output.append("\n" + "-" * 60 + "\n")
         print("\n" + "-" * 60 + "\n")
@@ -137,8 +160,11 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
     print(output[-1])
 
     # BM25 Retrieverの構築
-    bm25_retriever = BM25Retriever.from_documents(splits)
-    bm25_retriever.k = 8  # 多めに候補を取得
+    bm25_retriever = BM25Retriever.from_documents(
+        splits,
+        preprocess_func=tokenize_for_bm25,
+    )
+    bm25_retriever.k = 12  # 多めに候補を取得
 
     # ベクトル検索 Retrieverの構築
     embeddings = OpenAIEmbeddings()
@@ -147,7 +173,7 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         embedding=embeddings,
         collection_name="ensemble_demo"
     )
-    dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
+    dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 6})
 
     # EnsembleRetrieverでハイブリッド検索を構築（内部でRRF）
     # weights: 各Retrieverの重み付け（合計1でなくてよい）
@@ -157,12 +183,10 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         c=60,               # RRFのk（高順位をどれだけ強調するか）
     )
 
-    # テストクエリ
+    # テストクエリ（ハイブリッドデモ用）
     test_queries = [
-        "Elasticsearch クエリ実装",
-        "開発効率を向上させる手法",
-        "RAGシステムの最適化手法",
-        "EnsembleRetriever RRF",
+        "X-Pack monitoring の設定方法",
+        "セマンティック検索のメリット",
     ]
 
     for query in test_queries:
@@ -174,34 +198,32 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         # ハイブリッド検索の実行
         results = hybrid_retriever.invoke(query)
 
-        # 上位4件を表示
+        # 上位4件を表示（ファイル名＋タイトル）
         output.append("ハイブリッド検索結果（上位4件）:")
         print("ハイブリッド検索結果（上位4件）:")
         for i, doc in enumerate(results[:4]):
             source = doc.metadata.get('source', 'unknown')
-            content = doc.page_content[:100] + "..."
-            output.append(f"  【結果{i+1}】{source}")
-            output.append(f"    内容: {content}")
-            print(f"  【結果{i+1}】{source}")
-            print(f"    内容: {content}")
+            title = doc.page_content.splitlines()[0]
+            output.append(f"  【結果{i+1}】{source}: {title}")
+            print(f"  【結果{i+1}】{source}: {title}")
 
         output.append("")
         print()
 
     save_result("5-4-1-ensemble-results.txt", "\n".join(output))
 
-    # 重み付けの影響を確認
+    # 重み付けの影響を確認（1クエリで1位が入れ替わる例）
     output2 = []
     output2.append("\n=== 重み付けの影響の確認 ===\n")
     print(output2[-1])
 
     weight_configs = [
-        (1.0, 0.2, "BM25重視"),
+        (0.9, 0.1, "BM25重視"),
         (0.5, 0.5, "均等"),
-        (0.2, 1.0, "ベクトル重視"),
+        (0.1, 0.9, "ベクトル重視"),
     ]
 
-    query = "BM25 Elasticsearch"  # 技術用語を含むクエリ
+    query = "セマンティック検索のメリット"  # 重みで1位が揺れやすいクエリ
 
     for bm25_w, vec_w, desc in weight_configs:
         output2.append(f"\n設定: {desc} (BM25={bm25_w}, Vector={vec_w})")
@@ -233,11 +255,6 @@ def main():
     """メインの実行関数"""
     # .envファイルから環境変数を読み込み
     load_dotenv()
-
-    # OpenAI APIキーの確認
-    if not os.getenv("OPENAI_API_KEY"):
-        print("エラー: OPENAI_API_KEY環境変数が設定されていません")
-        sys.exit(1)
 
     # サンプル文書の読み込み
     documents = load_documents_from_files()

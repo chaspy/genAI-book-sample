@@ -1,82 +1,18 @@
 
 === EnsembleRetriever（ハイブリッド検索）のデモ ===
 
-クエリ: 'Elasticsearch クエリ実装'
+クエリ: 'X-Pack monitoring の設定方法'
 --------------------------------------------------
 ハイブリッド検索結果（上位4件）:
-  【結果1】hybrid_doc_02.txt
-    内容: Elasticsearchによる高性能検索システムの実装
+  【結果1】hybrid_doc_02.txt: Elasticsearchによる高性能検索システムの実装
+  【結果2】hybrid_doc_04.txt: 開発者の生産性向上と創造的業務への集中
+  【結果3】hybrid_doc_05.txt: RAGシステムの最適化手法と実装戦略
+  【結果4】hybrid_doc_01.txt: BM25アルゴリズムの実装詳細
 
-Elasticsearchは分散型のリアルタイム検索・分析エンジンで、Apache Luceneをベースに構築されています。RESTful ...
-  【結果2】hybrid_doc_03.txt
-    内容: 検索技術の進化と意味理解の革命
-
-従来のキーワードベースの検索から、意味を理解する検索へとパラダイムシフトが起きています。語彙のミスマッチ問題を解決し、ユーザーの真の検索意図を理解することが可能になり...
-  【結果3】hybrid_doc_05.txt
-    内容: RAGシステムの最適化手法と実装戦略
-
-Retrieval-Augmented Generationの性能向上には、複数のアプローチを組み合わせることが効果的です。BM25とDense Retriev...
-  【結果4】hybrid_doc_06.txt
-    内容: LangChainのEnsembleRetrieverによる統合検索
-
-EnsembleRetrieverクラスは複数のRetrieverを統合し、Reciprocal Rank Fusion（RRF...
-
-クエリ: '開発効率を向上させる手法'
+クエリ: 'セマンティック検索のメリット'
 --------------------------------------------------
 ハイブリッド検索結果（上位4件）:
-  【結果1】hybrid_doc_04.txt
-    内容: 開発者の生産性向上と創造的業務への集中
-
-適切なツールと手法を組み合わせることで、エンジニアの作業効率は大幅に改善されます。反復的なタスクの自動化により、より価値の高い創造的な仕事に時間を割けるように...
-  【結果2】hybrid_doc_05.txt
-    内容: RAGシステムの最適化手法と実装戦略
-
-Retrieval-Augmented Generationの性能向上には、複数のアプローチを組み合わせることが効果的です。BM25とDense Retriev...
-  【結果3】hybrid_doc_03.txt
-    内容: 検索技術の進化と意味理解の革命
-
-従来のキーワードベースの検索から、意味を理解する検索へとパラダイムシフトが起きています。語彙のミスマッチ問題を解決し、ユーザーの真の検索意図を理解することが可能になり...
-  【結果4】hybrid_doc_06.txt
-    内容: LangChainのEnsembleRetrieverによる統合検索
-
-EnsembleRetrieverクラスは複数のRetrieverを統合し、Reciprocal Rank Fusion（RRF...
-
-クエリ: 'RAGシステムの最適化手法'
---------------------------------------------------
-ハイブリッド検索結果（上位4件）:
-  【結果1】hybrid_doc_05.txt
-    内容: RAGシステムの最適化手法と実装戦略
-
-Retrieval-Augmented Generationの性能向上には、複数のアプローチを組み合わせることが効果的です。BM25とDense Retriev...
-  【結果2】hybrid_doc_04.txt
-    内容: 開発者の生産性向上と創造的業務への集中
-
-適切なツールと手法を組み合わせることで、エンジニアの作業効率は大幅に改善されます。反復的なタスクの自動化により、より価値の高い創造的な仕事に時間を割けるように...
-  【結果3】hybrid_doc_06.txt
-    内容: LangChainのEnsembleRetrieverによる統合検索
-
-EnsembleRetrieverクラスは複数のRetrieverを統合し、Reciprocal Rank Fusion（RRF...
-  【結果4】hybrid_doc_02.txt
-    内容: Elasticsearchによる高性能検索システムの実装
-
-Elasticsearchは分散型のリアルタイム検索・分析エンジンで、Apache Luceneをベースに構築されています。RESTful ...
-
-クエリ: 'EnsembleRetriever RRF'
---------------------------------------------------
-ハイブリッド検索結果（上位4件）:
-  【結果1】hybrid_doc_06.txt
-    内容: LangChainのEnsembleRetrieverによる統合検索
-
-EnsembleRetrieverクラスは複数のRetrieverを統合し、Reciprocal Rank Fusion（RRF...
-  【結果2】hybrid_doc_05.txt
-    内容: RAGシステムの最適化手法と実装戦略
-
-Retrieval-Augmented Generationの性能向上には、複数のアプローチを組み合わせることが効果的です。BM25とDense Retriev...
-  【結果3】hybrid_doc_03.txt
-    内容: 検索技術の進化と意味理解の革命
-
-従来のキーワードベースの検索から、意味を理解する検索へとパラダイムシフトが起きています。語彙のミスマッチ問題を解決し、ユーザーの真の検索意図を理解することが可能になり...
-  【結果4】hybrid_doc_02.txt
-    内容: Elasticsearchによる高性能検索システムの実装
-
-Elasticsearchは分散型のリアルタイム検索・分析エンジンで、Apache Luceneをベースに構築されています。RESTful ...
+  【結果1】hybrid_doc_02.txt: Elasticsearchによる高性能検索システムの実装
+  【結果2】hybrid_doc_03.txt: 検索技術の進化と意味理解の革命
+  【結果3】hybrid_doc_05.txt: RAGシステムの最適化手法と実装戦略
+  【結果4】hybrid_doc_04.txt: 開発者の生産性向上と創造的業務への集中
