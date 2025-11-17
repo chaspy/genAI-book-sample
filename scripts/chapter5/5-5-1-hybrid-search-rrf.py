@@ -165,7 +165,7 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         splits,
         preprocess_func=tokenize_for_bm25,
     )
-    bm25_retriever.k = 8  # 多めに候補を取得
+    bm25_retriever.k = 12  # 多めに候補を取得
 
     # ベクトル検索 Retrieverの構築
     embeddings = OpenAIEmbeddings()
@@ -174,7 +174,7 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         embedding=embeddings,
         collection_name="ensemble_demo"
     )
-    dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
+    dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 6})
 
     # EnsembleRetrieverでハイブリッド検索を構築（内部でRRF）
     # weights: 各Retrieverの重み付け（合計1でなくてよい）
@@ -219,9 +219,9 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
     print(output2[-1])
 
     weight_configs = [
-        (1.0, 0.2, "BM25重視"),
-        (0.5, 0.5, "均等"),
-        (0.2, 1.0, "ベクトル重視"),
+        (1.0, 0.1, "BM25重視"),
+        (1.0, 1.0, "均等"),
+        (0.2, 2.0, "ベクトル重視"),
     ]
 
     query = "RAGを最適化するにはDense Retrievalをどう使う？"  # 本文と同じクエリで比較
