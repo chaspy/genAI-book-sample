@@ -131,18 +131,16 @@ def compare_retrieval_methods(splits: List[Document]):
         print("\n【BM25検索結果】")
         bm25_results = bm25_retriever.invoke(query)
         for i, doc in enumerate(bm25_results):
-            content = doc.page_content[:80] + "..."
-            output.append(f"  {i+1}. {doc.metadata['source']}: {content}")
-            print(f"  {i+1}. {doc.metadata['source']}: {content}")
+            output.append(f"  {i+1}. {doc.metadata['source']}")
+            print(f"  {i+1}. {doc.metadata['source']}")
 
         # ベクトル検索
         output.append("\n【ベクトル検索結果】")
         print("\n【ベクトル検索結果】")
         vector_results = dense_retriever.invoke(query)
         for i, doc in enumerate(vector_results):
-            content = doc.page_content[:80] + "..."
-            output.append(f"  {i+1}. {doc.metadata['source']}: {content}")
-            print(f"  {i+1}. {doc.metadata['source']}: {content}")
+            output.append(f"  {i+1}. {doc.metadata['source']}")
+            print(f"  {i+1}. {doc.metadata['source']}")
 
         output.append("\n" + "-" * 60 + "\n")
         print("\n" + "-" * 60 + "\n")
@@ -199,16 +197,13 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         # ハイブリッド検索の実行
         results = hybrid_retriever.invoke(query)
 
-        # 上位4件を表示
+        # 上位4件を表示（ファイル名のみ）
         output.append("ハイブリッド検索結果（上位4件）:")
         print("ハイブリッド検索結果（上位4件）:")
         for i, doc in enumerate(results[:4]):
             source = doc.metadata.get('source', 'unknown')
-            content = doc.page_content[:100] + "..."
             output.append(f"  【結果{i+1}】{source}")
-            output.append(f"    内容: {content}")
             print(f"  【結果{i+1}】{source}")
-            print(f"    内容: {content}")
 
         output.append("")
         print()
