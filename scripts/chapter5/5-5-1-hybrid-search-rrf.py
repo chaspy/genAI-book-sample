@@ -183,7 +183,7 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         c=60,               # RRFのk（高順位をどれだけ強調するか）
     )
 
-    # テストクエリ
+    # テストクエリ（ハイブリッドデモ用）
     test_queries = [
         "X-Pack monitoring の設定方法",
         "セマンティック検索のメリット",
@@ -212,7 +212,7 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
 
     save_result("5-4-1-ensemble-results.txt", "\n".join(output))
 
-    # 重み付けの影響を確認
+    # 重み付けの影響を確認（1クエリで1位が入れ替わる例）
     output2 = []
     output2.append("\n=== 重み付けの影響の確認 ===\n")
     print(output2[-1])
