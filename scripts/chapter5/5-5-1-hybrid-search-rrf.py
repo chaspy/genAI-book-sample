@@ -8,6 +8,7 @@ LangChainのEnsembleRetrieverを使用したハイブリッド検索の実装
 
 import os
 import sys
+import re
 from typing import List
 from pathlib import Path
 from dotenv import load_dotenv
@@ -60,6 +61,25 @@ def load_documents_from_files() -> List[Document]:
     return documents
 
 
+def tokenize_for_bm25(text: str) -> list[str]:
+    """
+    日本語を含むテキストを軽量にトークナイズする。
+    - 英数字はそのまま1トークン。
+    - 漢字・ひらがな・カタカナの連続部分は文字bi-gramに分解し、部分一致しやすくする。
+    """
+    tokens: list[str] = []
+    for chunk in re.findall(r"[A-Za-z0-9]+|[一-龥ぁ-んァ-ンー]+", text):
+        if re.fullmatch(r"[A-Za-z0-9]+", chunk):
+            tokens.append(chunk)
+        else:
+            # 日本語部分は bi-gram で分割して BM25 のヒット率を上げる
+            if len(chunk) == 1:
+                tokens.append(chunk)
+            else:
+                tokens.extend(chunk[i : i + 2] for i in range(len(chunk) - 1))
+    return tokens
+
+
 def save_result(filename: str, content: str):
     """結果をファイルに保存"""
     from pathlib import Path
@@ -78,7 +98,10 @@ def compare_retrieval_methods(splits: List[Document]):
     print(output[-1])
 
     # 1. BM25 Retrieverの構築
-    bm25_retriever = BM25Retriever.from_documents(splits)
+    bm25_retriever = BM25Retriever.from_documents(
+        splits,
+        preprocess_func=tokenize_for_bm25,
+    )
     bm25_retriever.k = 3
 
     # 2. ベクトル検索 Retrieverの構築
@@ -137,7 +160,10 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
     print(output[-1])
 
     # BM25 Retrieverの構築
-    bm25_retriever = BM25Retriever.from_documents(splits)
+    bm25_retriever = BM25Retriever.from_documents(
+        splits,
+        preprocess_func=tokenize_for_bm25,
+    )
     bm25_retriever.k = 8  # 多めに候補を取得
 
     # ベクトル検索 Retrieverの構築
@@ -159,10 +185,8 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
 
     # テストクエリ
     test_queries = [
-        "Elasticsearch クエリ実装",
-        "開発効率を向上させる手法",
-        "RAGシステムの最適化手法",
-        "EnsembleRetriever RRF",
+        "Elasticsearchの監視設定",
+        "埋め込み検索のメリット",
     ]
 
     for query in test_queries:
@@ -201,7 +225,7 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         (0.2, 1.0, "ベクトル重視"),
     ]
 
-    query = "BM25 Elasticsearch"  # 技術用語を含むクエリ
+    query = "RAGを最適化するにはDense Retrievalをどう使う？"  # 本文と同じクエリで比較
 
     for bm25_w, vec_w, desc in weight_configs:
         output2.append(f"\n設定: {desc} (BM25={bm25_w}, Vector={vec_w})")
