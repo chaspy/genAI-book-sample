@@ -5,20 +5,20 @@
 設定: BM25重視 (BM25=0.9, Vector=0.1)
 ----------------------------------------
 上位3件の結果:
-  1. hybrid_doc_05.txt
-  2. hybrid_doc_03.txt
-  3. hybrid_doc_02.txt
+  1. hybrid_doc_02.txt
+  2. hybrid_doc_04.txt
+  3. hybrid_doc_05.txt
 
 設定: 均等 (BM25=0.5, Vector=0.5)
 ----------------------------------------
 上位3件の結果:
-  1. hybrid_doc_05.txt
+  1. hybrid_doc_02.txt
   2. hybrid_doc_03.txt
-  3. hybrid_doc_02.txt
+  3. hybrid_doc_04.txt
 
 設定: ベクトル重視 (BM25=0.1, Vector=0.9)
 ----------------------------------------
 上位3件の結果:
-  1. hybrid_doc_05.txt
-  2. hybrid_doc_03.txt
-  3. hybrid_doc_06.txt
+  1. hybrid_doc_03.txt
+  2. hybrid_doc_02.txt
+  3. hybrid_doc_05.txt

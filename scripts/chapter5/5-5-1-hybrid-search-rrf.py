@@ -113,11 +113,10 @@ def compare_retrieval_methods(splits: List[Document]):
     )
     dense_retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
-    # テストクエリ（本文と同じ3件）
+    # テストクエリ（本文と同じ2件）
     queries = [
         "X-Pack monitoring の設定方法",                    # 固有名詞・製品名でBM25が有利
         "セマンティック検索のメリット",                       # 抽象表現でベクトルが有利
-        "EnsembleRetriever で複数リトリーバを統合する利点",  # 重み比較で差が出やすい
     ]
 
     for query in queries:
@@ -186,8 +185,8 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
 
     # テストクエリ
     test_queries = [
-        "Elasticsearchの監視設定",
-        "埋め込み検索のメリット",
+        "X-Pack monitoring の設定方法",
+        "セマンティック検索のメリット",
     ]
 
     for query in test_queries:
@@ -224,7 +223,7 @@ def demonstrate_ensemble_retriever(splits: List[Document]):
         (0.1, 0.9, "ベクトル重視"),
     ]
 
-    query = "RAGを最適化するにはDense Retrievalをどう使う？"  # 本文と同じクエリで比較
+    query = "セマンティック検索のメリット"  # 重みで1位が揺れやすいクエリ
 
     for bm25_w, vec_w, desc in weight_configs:
         output2.append(f"\n設定: {desc} (BM25={bm25_w}, Vector={vec_w})")
