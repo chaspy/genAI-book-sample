@@ -16,8 +16,9 @@ from langgraph.prebuilt import ToolNode
 import operator
 from langchain_tavily import TavilySearch
 
-# outputs/ ディレクトリの自動作成
-Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parent
+OUTPUT_DIR = ROOT / "outputs"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_STEPS = 5
 MIN_SEARCHES = 3
@@ -138,6 +139,7 @@ def compose_node(state: AgentState) -> AgentState:
         new_state["search_count"] = state["search_count"] + 1
 
         # 検索結果を短縮してトークン数を削減
+        parsed_content = last_message.content
         try:
             import json
             # 文字列の場合のみJSON解析を試行
@@ -170,8 +172,31 @@ def compose_node(state: AgentState) -> AgentState:
                     tool_call_id=last_message.tool_call_id
                 )
                 new_state["messages"] = [*state["messages"][:-1], short_message]
+                parsed_content = content
         except Exception as e:
             print(f"[Compose] 検索結果の短縮に失敗: {e}")
+
+        # 取得したURLを findings に追加（重複除去）
+        findings = list(state["findings"])
+        try:
+            import json
+            if isinstance(parsed_content, str):
+                try:
+                    parsed_content = json.loads(parsed_content)
+                except json.JSONDecodeError:
+                    pass
+            if isinstance(parsed_content, dict) and "results" in parsed_content:
+                added = 0
+                for r in parsed_content.get("results", []):
+                    url = r.get("url") if isinstance(r, dict) else None
+                    if url and url not in findings:
+                        findings.append(url)
+                        added += 1
+                if added:
+                    new_state["findings"] = findings
+                    print(f"[Compose] 新しい情報を追加 (計 {len(findings)} 件)")
+        except Exception as e:
+            print(f"[Compose] findings への追加に失敗: {e}")
 
         # 検索クエリを取得（デバッグ用）
         query_info = ""
@@ -184,13 +209,6 @@ def compose_node(state: AgentState) -> AgentState:
                     pass
                 break
         print(f"[Compose] 検索実行 ({new_state['search_count']}回目){query_info}")
-
-    if isinstance(last_message, AIMessage):
-        content = str(last_message.content)
-        if content and content not in state["findings"]:
-            findings = [*state["findings"], content]
-            new_state["findings"] = findings
-            print(f"[Compose] 新しい情報を追加 (計 {len(findings)} 件)")
 
     return new_state
 
@@ -278,24 +296,15 @@ def run(query: str) -> None:
             print(message.content)
             break
 
-    print(f"\n収集した情報数: {len(final_state['findings'])}")
-    print(f"実行ステップ数: {final_state['step_count']}")
-
-    # 標準化されたサマリー出力
-    steps = final_state["step_count"]
-
-    # tool_calls: ツール呼び出しの回数を数える
-    tool_calls = sum(1 for msg in final_state["messages"]
-                     if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None))
-
-    # sources: 取得したソースの数（検索結果のURLなど）
-    # search_count から取得
-    sources = final_state["search_count"] * 3  # 各検索で最大3件のURLを取得
-
-    # satisfied: エージェントが満足したかどうか
+    info_count = len(final_state["findings"])
+    step_count = final_state["step_count"]
+    tool_calls = final_state["search_count"]  # 実行した検索回数と一致
+    sources = info_count  # 収集したURL数をそのまま採用
     satisfied = final_state["satisfied"]
 
-    print(f"\n[Summary] steps={steps} tool_calls={tool_calls} sources={sources} satisfied={satisfied}")
+    print(f"\n収集した情報数: {info_count}")
+    print(f"実行ステップ数: {step_count}")
+    print(f"\n[Summary] steps={step_count} tool_calls={tool_calls} sources={sources} satisfied={satisfied}")
 
 def main() -> None:
     user_query = sys.argv[1] if len(sys.argv) > 1 else "2025年の生成 AI 業界の主要な動向を3つ教えてください"

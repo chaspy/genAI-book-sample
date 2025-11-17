@@ -21,37 +21,37 @@ cp .env.example .env
 vi .env  # OPENAI_API_KEY / TAVILY_API_KEY を入力
 ```
 
-ランタイムは `uv run` で起動し、`.env` をそのまま読み込ませるのが簡単です。Python は 3.13 系を前提としています。
+スクリプト側で `load_dotenv()` を呼んでいるため、`.env` は自動で読み込まれます。Python は 3.13 系を前提としています。
 
 ## 🚀 実行方法の例
 
 ### 7-3 ReAct エージェント（検索→要約）
 ```bash
-uv run --env-file .env python 7-3_react_search.py | tee outputs/7-3_react_search-out.txt
+uv run python 7-3_react_search.py | tee outputs/7-3_react_search-out.txt
 ```
 
 ### 7-4 LangGraph エージェント（状態管理付き）
 ```bash
-uv run --env-file .env python 7-4_langgraph_search.py | tee outputs/7-4_langgraph_search-out.txt
+uv run python 7-4_langgraph_search.py | tee outputs/7-4_langgraph_search-out.txt
 ```
 
 ### 7-5 調査エージェント（出典提示）
 ```bash
-uv run --env-file .env python 7-5_research_agent.py | tee outputs/7-5_research_agent-out.txt
+uv run python 7-5_research_agent.py | tee outputs/7-5_research_agent-out.txt
 ```
 
 ### 7-6 RAG × Agent（社内優先→Web 補完）
 ```bash
-uv run --env-file .env python 7-6_rag_agent.py | tee outputs/7-6_rag_agent-out.txt
+uv run python 7-6_rag_agent.py | tee outputs/7-6_rag_agent-out.txt
 ```
 
 ## 🧪 一括実行
 
 ```bash
-uv run --env-file .env python run_all.py
+uv run python run_all.py
 ```
 
-すべてのデモを順番に実行し、最新のログを `outputs/` 配下に保存します。
+すべてのデモを順番に実行し、最新のログを `outputs/` 配下に保存します。各スクリプト自身でも `scripts/chapter7/outputs/` を自動生成するため、個別実行・一括実行のどちらでも同じ場所にまとめられます。
 
 ## 📁 ファイル一覧
 
@@ -64,11 +64,11 @@ uv run --env-file .env python run_all.py
 | `run_all.py` | 主要デモを順番に実行し出力をまとめるスクリプト |
 | `pyproject.toml` / `uv.lock` | uv 用の依存管理ファイル |
 | `.env.example` | 必須 API キーのサンプル |
-| `outputs/` | 実行結果ログ（`run_all.py` が生成） |
+| `outputs/` | 実行結果ログ（各スクリプト・`run_all.py` が自動生成） |
 
 ## 📝 補足
 
 - 章本文では `scripts/chapter7` からコードを引用し、`outputs/` に保存した実行結果を掲載します。
 - ネットワーク環境や API 制限により、一部のログは内容が変わることがあります。章のスクリーンショットを更新するときは、最新のログを取得して差し替えてください。
 - GitHub Issues/PR を補完情報として使いたい場合は、事前に `gh auth login` を実行しておくと `7-6_rag_agent.py` が MCP サーバーを自動的に有効化します。
-
+- 出力先ディレクトリは各スクリプトと同じ場所（`scripts/chapter7/outputs/`）に固定しており、`cd scripts/chapter7` 済みでも階層が二重に掘られることはありません。

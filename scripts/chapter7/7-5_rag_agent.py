@@ -30,8 +30,9 @@ from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
 )  # LangChain v1 でモジュール分割された text splitter
 
-# outputs/ ディレクトリの自動作成
-Path("scripts/chapter7/outputs").mkdir(parents=True, exist_ok=True)
+ROOT = Path(__file__).resolve().parent
+OUTPUT_DIR = ROOT / "outputs"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # LangGraph の 1 ステップは「LLM 思考 + ツール実行」で2～3カウント進むため、
 # 社内+Web+GitHub を行き来する調査でも余裕があるよう 15 ステップ確保しておく。
