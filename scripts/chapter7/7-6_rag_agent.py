@@ -433,6 +433,20 @@ def agent_node(state: RAGAgentState) -> RAGAgentState:
     # LLMに次のアクションを決めてもらう
     response = llm.invoke(messages_to_send)
 
+    # 1ステップ内の同一ツール呼び出しは name+args で重複排除
+    if isinstance(response, AIMessage) and getattr(response, "tool_calls", None):
+        seen = set()
+        unique_calls = []
+        for call in response.tool_calls:
+            key = (call.get("name"), json.dumps(call.get("args", {}), ensure_ascii=False, sort_keys=True))
+            if key in seen:
+                continue
+            seen.add(key)
+            unique_calls.append(call)
+        if len(unique_calls) < len(response.tool_calls):
+            print(f"[Agent] 重複ツール呼び出しを {len(response.tool_calls) - len(unique_calls)} 件削除")
+        response.tool_calls = unique_calls
+
     # 新しい状態を作成
     new_state = dict(state)
     new_state["messages"] = [*state["messages"], response]
