@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.13"
 
 [[package]]
@@ -46,7 +46,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "openai", specifier = "==1.107.3" },
+    { name = "openai", specifier = "==2.9.0" },
     { name = "python-dotenv", specifier = "==1.1.1" },
     { name = "requests", specifier = "==2.32.5" },
     { name = "tiktoken", specifier = "==0.11.0" },
@@ -185,7 +185,7 @@ wheels = [
 
 [[package]]
 name = "openai"
-version = "1.107.3"
+version = "2.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -197,9 +197,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e3/24/7fb5749bcf66b52209e3ece05cb4eaeae2102e95f8ae77589e8afaf70ba8/openai-1.107.3.tar.gz", hash = "sha256:69bb8032b05c5f00f7660e422f70f9aabc94793b9a30c5f899360ed21e46314f", size = 564194, upload-time = "2025-09-15T20:09:20.159Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/09/48/516290f38745cc1e72856f50e8afed4a7f9ac396a5a18f39e892ab89dfc2/openai-2.9.0.tar.gz", hash = "sha256:b52ec65727fc8f1eed2fbc86c8eac0998900c7ef63aa2eb5c24b69717c56fa5f", size = 608202, upload-time = "2025-12-04T18:15:09.01Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/1d/58ad0084451f64a9193de48c0afd63047682ffdedb6ae1d494a203e03fd5/openai-1.107.3-py3-none-any.whl", hash = "sha256:4ca54a847235ac04c6320da70fdc06b62d71439de9ec0aa40d5690c3064d4025", size = 947600, upload-time = "2025-09-15T20:09:18.219Z" },
+    { url = "https://files.pythonhosted.org/packages/59/fd/ae2da789cd923dd033c99b8d544071a827c92046b150db01cfa5cea5b3fd/openai-2.9.0-py3-none-any.whl", hash = "sha256:0d168a490fbb45630ad508a6f3022013c155a68fd708069b6a1a01a5e8f0ffad", size = 1030836, upload-time = "2025-12-04T18:15:07.063Z" },
 ]
 
 [[package]]
