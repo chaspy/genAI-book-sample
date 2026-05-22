@@ -55,7 +55,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "langfuse", specifier = "==3.4.0" },
+    { name = "langfuse", specifier = "==3.15.0" },
     { name = "openai", specifier = "==1.101.0" },
     { name = "python-dotenv", specifier = "==1.1.1" },
 ]
@@ -264,22 +264,22 @@ wheels = [
 
 [[package]]
 name = "langfuse"
-version = "3.4.0"
+version = "3.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backoff" },
     { name = "httpx" },
+    { name = "openai" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-sdk" },
     { name = "packaging" },
     { name = "pydantic" },
-    { name = "requests" },
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8b/56/58212b039999046ff365156e449d4bb788549b387c168dd13d6ce9546208/langfuse-3.4.0.tar.gz", hash = "sha256:34fa80ea52bb13f48530de4d3540efb0011a72cdb1589de598b047e07eb5d387", size = 181913, upload-time = "2025-09-17T09:47:05.193Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/be/db/08266f22e1843d4c2743a1d23b7f93828ec6d5f6a4445f7d2ad3074d8b95/langfuse-3.15.0.tar.gz", hash = "sha256:4b6453c82c8159e5f0655ced24b145ed8279b47382a6b4a6d7a57111ef922181", size = 237275, upload-time = "2026-05-21T11:12:59.643Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0d/ad/2d74a2fae60e387f3c0117d1778a38f95e73d77501c037661367ac2e9760/langfuse-3.4.0-py3-none-any.whl", hash = "sha256:860624f84875cfe98bc228db55c6e09ca9ad6db4275b1b2ccae2ece9751f97a5", size = 336789, upload-time = "2025-09-17T09:47:03.585Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/5b/1f16b421f5de996abfb10472d47c72bc829a56cbedacfbf908ebf8cc0469/langfuse-3.15.0-py3-none-any.whl", hash = "sha256:66a3c2b75af9402ffc13690fce73181325d6f78e723463e38844b317d37279ac", size = 424191, upload-time = "2026-05-21T11:12:57.493Z" },
 ]
 
 [[package]]
