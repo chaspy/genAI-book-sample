@@ -2,7 +2,7 @@
 name = "genai-book-chapter7"
 version = "1.0.0"
 description = "第7章 AI Agent 開発編のサンプルコード"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14,<3.15"
 dependencies = [
     "langchain>=1.0.5",
     "langchain-core>=1.0.4",
